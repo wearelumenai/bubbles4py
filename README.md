@@ -115,9 +115,12 @@ server.app.route('/bubbles', method="GET", callback=custom_handler)
 Useful Javascript library are available at the following URLs :
  - `/tools/bubbles.js` : the bubble chart library bundle
  (see https://github.com/wearelumenai/bubbles)
- - `/tools/viz.js` : a utility library to bind components to bubble chart
+ - `/tools/viz.js` : a utility library to bind components to a bubble chart
  
-This builds a bubble chart in a div which id is `viz` 
+The following explanations may help to build a custom visualization page
+based on the tools listed above.
+
+First a bubble chart in a div which id is `viz` 
 (any CSS selector can be used) :
 ```javascript
 let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
@@ -126,20 +129,20 @@ let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick
 The `onChartClick` handler reacts to a mouse click.
 It will be used to display cluster content.
 
-The following code builds a table to display cluster content in an existing div :
+Build a table to display cluster content in an existing div :
 ```javascript
-const detailsDisplay = DetailDisplay(d3.select("#detail"));
+const detailDisplay = DetailDisplay(d3.select("#detail"));
 ```
 
 The definition of `onChartClick` binds the bubble chart to the detail display :
 ```javascript
 function onChartClick(x, y) {
     const [id] = bubbleChart.getClustersAtPosition(x, y);
-    detailsDisplay.detailChanged(id)
+    detailDisplay.detailChanged(id)
 }
 ```
 
-This builds a dimension selector in an existing div :
+Then build a dimension selector in an existing div :
 ```javascript
 const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChange);
 ```
@@ -154,7 +157,7 @@ function onDimensionChanged(data, dimensions) {
 At last, the result is fetched and visualization is started :
 ```javascript
 d3.json(`./result/${getResultId()}`).then(
-    result => startViz(result, dimensionPicker, detailsDisplay)
+    result => startViz(result, dimensionPicker, detailDisplay)
 );
 ```
 
