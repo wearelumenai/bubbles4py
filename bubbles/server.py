@@ -1,15 +1,12 @@
-import argparse
 import json
 import logging
 import os
 import signal
-import sys
 import time
 from multiprocessing import Process
 
 from bottle import Bottle, request, response, static_file
 
-from .drivers import drivers
 
 _root = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'root')
 
@@ -70,23 +67,3 @@ class Server:
 
         signal.signal(signal.SIGINT, _term)
 
-
-def get_driver(driver_class, *args):
-    return drivers[driver_class](*args)
-
-
-def start(driver_args, server_name):
-    driver = get_driver(*driver_args)
-    server = Server(driver)
-    server.start(server=server_name)
-    server.wait()
-
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-d', '--driver', nargs='+', required=True)
-    parser.add_argument('-s', '--server', default='gunicorn')
-    args = parser.parse_args()
-    sys.argv = [sys.argv[0]]
-
-    start(args.driver, args.server)
