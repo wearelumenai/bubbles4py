@@ -116,4 +116,43 @@ Useful Javascript library are available at the following URLs :
  - `/tools/bubbles.js` : the bubble chart library bundle
  (see https://github.com/wearelumenai/bubbles)
  - `/tools/viz.js` : a utility library to bind components to bubble chart
+ 
+This builds a bubble chart in a div which id is `viz` 
+(any CSS selector can be used) :
+```javascript
+let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
+```
+
+`onChartClick` is a handler that react to a mouse click to display cluster content.
+The following code builds a table to display cluster content in an existing div :
+```javascript
+const detailsDisplay = DetailDisplay(d3.select("#detail"));
+```
+
+Now the definition of `onChartClick` :
+```javascript
+function onChartClick(x, y) {
+    const [id] = bubbleChart.getClustersAtPosition(x, y);
+    detailsDisplay.detailChanged(id)
+}
+```
+
+This builds a dimension selector in an existing div :
+```javascript
+const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChange);
+```
+The `onDimensionChange` is a handler that react to a change
+in the selected dimension. It updates the bubble chart accordingly :
+```javascript
+function onDimensionChanged(data, dimensions) {
+    bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
+}
+```
+
+At last, the result is fetched and visualization is started :
+```javascript
+d3.json(`./result/${getResultId()}`).then(
+    result => startViz(result, dimensionPicker, detailsDisplay)
+);
+```
 
