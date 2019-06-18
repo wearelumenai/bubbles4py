@@ -1,3 +1,3 @@
-from memdriver import MemDriver
+from .memdriver import MemDriver
 
 drivers = {'MemDriver': MemDriver}

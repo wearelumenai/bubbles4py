@@ -8,7 +8,7 @@ from multiprocessing import Process
 
 from bottle import Bottle, request, response, static_file
 
-from drivers import drivers
+from .drivers import drivers
 
 _root = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'root')
 
