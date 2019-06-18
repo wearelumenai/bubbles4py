@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bubbles</title>
+    <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+    <script src="https://d3js.org/d3-fetch.v1.min.js"></script>
+    <script src="js/bubbles.js"></script>
+    <script src="js/viz.js"></script>
+</head>
+<body>
+<div id="main">
+    <div id="board">
+        <div class="sbs" id="command"></div>
+        <button onclick="window.open('', '_self', ''); window.close();">Close</button>
+        <div class="sbs" id="detail"></div>
+    </div>
+    <div id="viz" style="width: 900px; height: 600px"></div>
+</div>
+</body>
+<script>
+    var bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
+
+    const detailsDisplay = DetailDisplay(d3.select("#detail"));
+
+    function onChartClick(x, y) {
+        const [id] = bubbleChart.getClustersAtPosition(x, y);
+        detailsDisplay.detailChanged(id)
+    }
+
+    const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);
+
+    function onDimensionChanged(data, dimensions) {
+        bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
+    }
+
+    d3.json(`./result/${getResultId()}`).then(
+        result => startViz(result, dimensionPicker, detailsDisplay)
+    );
+</script>
+<style>
+    #main {
+        display: flex;
+        padding: 20px;
+    }
+
+    #board {
+        position: relative;
+    }
+
+    .sbs {
+        display: table;
+    }
+
+    .sbs div {
+        display: table-row;
+    }
+
+    .sbs div * {
+        display: table-cell;
+        padding-bottom: .5em;
+        padding-right: .5em;
+    }
+
+    button {
+        color: white;
+        background: #4C8FFB;
+        border: 1px #3079ED solid;
+        box-shadow: inset 0 1px 0 #80B0FB;
+        padding: 5px 10px;
+        border-radius: 2px;
+        font-weight: bold;
+        font-size: 9pt;
+        outline: none;
+        margin-top: 5px;
+    }
+
+    #command {
+        margin-bottom: 1em;
+    }
+
+    #command div select {
+        width: 15em;
+    }
+
+    #detail {
+        padding: .8em .4em 0 .8em;
+        position: absolute;
+        bottom: 3em;
+        width: 100%;
+    }
+
+    #detail.active {
+        background: lightgrey;
+    }
+
+    #detail .caption {
+        display: table-caption;
+        text-decoration: underline;
+    }
+
+    .cluster {
+        pointer-events: visible !important;
+        cursor: pointer;
+    }
+</style>
+</html>
