@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import os
 import signal
 import sys
@@ -59,6 +60,7 @@ class Server:
         def _term(timeout):
             time.sleep(timeout)
             self.process.terminate()
+            logging.warning('timeout reached, server was terminated')
 
         Process(target=_term, args=(timeout,)).start()
 
