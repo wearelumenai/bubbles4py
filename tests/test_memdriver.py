@@ -1,6 +1,6 @@
 import unittest
 
-from memdriver import MemDriver
+from bubbles.memdriver import MemDriver
 
 
 class TestMemDriver(unittest.TestCase):

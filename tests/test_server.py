@@ -1,10 +1,9 @@
 import unittest
 
-import requests
 from webtest import TestApp
 
-from memdriver import MemDriver
-from server import Server
+from bubbles.drivers import MemDriver
+from bubbles.server import Server
 
 
 class TestServer(unittest.TestCase):
@@ -27,10 +26,6 @@ class TestServer(unittest.TestCase):
         self.driver = MemDriver()
         self.server = Server(self.driver)
         self.app = TestApp(self.server.app)
-
-    def test_post(self):
-        r = requests.post('http://localhost:8080/result', json=self.result)
-        print(r.json()['result_id'])
 
     def test_post_result(self):
         r_post = self.app.post_json('/result', self.result)

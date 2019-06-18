@@ -2,8 +2,8 @@ from random import randint
 
 import requests
 
-from memdriver import MemDriver
-from server import Server
+from bubbles.drivers import MemDriver
+from bubbles import Server
 
 result = {
     'centers': [
@@ -24,7 +24,7 @@ server = Server(MemDriver())
 port = randint(44001, 44999)
 
 if __name__ == "__main__":
-    server.start(timeout=4, port=port, quiet=True)
+    server.start(port=port, quiet=True)
 
     r = requests.post('http://localhost:{}/result'.format(port), json=result)
     result_id = r.json()['result_id']
