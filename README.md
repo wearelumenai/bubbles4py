@@ -48,7 +48,4 @@ Now, the visualization is available at URL
 http://127.0.0.1:8080/bubbles?result_id=dzhbvyjitudwacbuowebgrahfixmtcvp
 where the result_id was sent back in the response of the POST query above.
 
-![bubbles](
-https://github.com/ydarma/bubbles4py/blob/master/README.md 
-"bubbles visualization"
-)
+![bubbles]( bubbles.png "bubbles visualization" )
