@@ -123,13 +123,15 @@ This builds a bubble chart in a div which id is `viz`
 let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
 ```
 
-`onChartClick` is a handler that react to a mouse click to display cluster content.
+The `onChartClick` handler reacts to a mouse click.
+It will be used to display cluster content.
+
 The following code builds a table to display cluster content in an existing div :
 ```javascript
 const detailsDisplay = DetailDisplay(d3.select("#detail"));
 ```
 
-Now the definition of `onChartClick` :
+The definition of `onChartClick` binds the bubble chart to the detail display :
 ```javascript
 function onChartClick(x, y) {
     const [id] = bubbleChart.getClustersAtPosition(x, y);
@@ -141,8 +143,8 @@ This builds a dimension selector in an existing div :
 ```javascript
 const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChange);
 ```
-The `onDimensionChange` is a handler that react to a change
-in the selected dimension. It updates the bubble chart accordingly :
+The `onDimensionChange` handler reacts to a change in the selected dimensions.
+Its definition updates the bubble chart accordingly :
 ```javascript
 function onDimensionChanged(data, dimensions) {
     bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
