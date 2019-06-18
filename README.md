@@ -120,7 +120,7 @@ Useful Javascript library are available at the following URLs :
 The following explanations may help to build a custom visualization page
 based on the tools listed above.
 
-First a bubble chart in a div which id is `viz` 
+First build a bubble chart in a div which id is `viz` 
 (any CSS selector can be used) :
 ```javascript
 let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
