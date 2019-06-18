@@ -8,12 +8,12 @@ To run the simple server from command line :
 $ python -m bubbles -d MemDriver
 ```
 
-The -d switch indicates the kind of storage used to store results 
-(see below advanced usage).
+The -d switch indicates the kind of storage used to store results, 
+here we use the Python program memory to store results.
 
 Now we can push some clustering result to the server :
 ```bash
-$ curl -XPOST 'http://127.0.0.1:8080/result' -d@result.json -i
+$ curl -XPOST 'http://127.0.0.1:49449/result' -d@result.json -i
 HTTP/1.1 201 Created
 Server: gunicorn/19.9.0
 Date: Tue, 18 Jun 2019 13:12:33 GMT
@@ -45,7 +45,75 @@ following :
 }
 ```
 Now, the visualization is available at URL 
-http://127.0.0.1:8080/bubbles?result_id=dzhbvyjitudwacbuowebgrahfixmtcvp
+http://127.0.0.1:49449/bubbles?result_id=dzhbvyjitudwacbuowebgrahfixmtcvp
 where the result_id was sent back in the response of the POST query above.
 
 ![bubbles]( bubbles.png "bubbles visualization" )
+
+The results can also be stored in Sqlite, in memory :
+```bash
+$ python -m bubbles -d SqliteDriver
+```
+or persisted to a file :
+```bash
+$ python -m bubbles -d SqliteDriver results.db
+```
+
+
+# Usage in a Python program
+
+The server can be started in a program. In the following script
+the server is started in background 
+and the program waits for a SIGINT (Ctrl-C) to end.
+```python
+from bubbles import Server
+from bubbles.drivers import MemDriver
+
+server = Server(MemDriver())
+server.start()
+server.wait()
+```
+It is possible to change host and port used by the server :
+```python
+server.start(host='host.here.com', port=41114)
+```
+
+The server can terminate after a given amount of time (in seconds).
+This is useful for example to start the server in a notebook
+and avoid resource leaks. For example :
+```python
+from bubbles import Server
+from bubbles.drivers import MemDriver
+
+result = {
+    'centers': [...],
+    'counts': [...],
+    'names': [...],
+}
+
+driver = MemDriver()
+result_id = driver.put_result(result)
+
+server = Server(driver)
+server.start(timeout=30)
+print(
+    'visit http://127.0.0.1:49449/bubbles?result_id={}' \
+    'in the next 30 seconds to visualize the result' \
+    .format(result_id)
+)
+server.wait()
+```
+
+# Customize the visualization
+
+The visualization page can be customized by overriding the ```/bubbles``` 
+route before calling `start` :
+```python
+server.app.route('/bubbles', method="GET", callback=custom_handler)
+```
+
+Useful Javascript library are available at the following URLs :
+ - `/tools/bubbles.js` : the bubble chart library bundle
+ (see https://github.com/wearelumenai/bubbles)
+ - `/tools/viz.js` : a utility library to bind components to bubble chart
+

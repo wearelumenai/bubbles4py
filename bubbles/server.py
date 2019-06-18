@@ -19,7 +19,7 @@ class Server:
         self.app.route('/result', method='POST', callback=self.post_result)
         self.app.route('/result/<result_id>', method='GET', callback=self.get_result)
         self.app.route('/bubbles', method='GET', callback=Server.get_bubbles)
-        self.app.route('/js/<filename>', method='GET', callback=Server.get_js)
+        self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
         self.process = None
 
     def post_result(self):
