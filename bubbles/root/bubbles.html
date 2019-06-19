@@ -20,15 +20,13 @@
 </body>
 <script>
     let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
-
     const detailsDisplay = DetailDisplay(d3.select("#detail"));
+    const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);
 
     function onChartClick(x, y) {
         const [id] = bubbleChart.getClustersAtPosition(x, y);
         detailsDisplay.detailChanged(id)
     }
-
-    const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);
 
     function onDimensionChanged(data, dimensions) {
         bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});

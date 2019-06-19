@@ -219,7 +219,6 @@ function onChartClick(x, y) {
     detailDisplay.detailChanged(id)
 }
 
-
 function onDimensionChanged(data, dimensions) {
     bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
 }
