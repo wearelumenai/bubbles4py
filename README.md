@@ -211,15 +211,14 @@ The following source put everything together.
 It creates the chart and then bind a detail display and a dimension picker :
 ```javascript
 let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
-
 const detailDisplay = DetailDisplay(d3.select("#detail"));
+const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChange);
 
 function onChartClick(x, y) {
     const [id] = bubbleChart.getClustersAtPosition(x, y);
     detailDisplay.detailChanged(id)
 }
 
-const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChange);
 
 function onDimensionChanged(data, dimensions) {
     bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
