@@ -207,8 +207,8 @@ d3.json(`./result/${getResultId()}`).then(
 );
 ```
 
-The following source put everything together,
-create the chart and bind a detail display and a dimension picker :
+The following source put everything together.
+It creates the chart and then bind a detail display and a dimension picker :
 ```javascript
 let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
 
