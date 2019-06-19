@@ -135,7 +135,7 @@ driver = MemDriver()
 result_id = driver.put_result(result)
 
 server = Server(driver)
-server.start(timeout=30)
+server.start(timeout=30, port=49449)
 print(
     'visit http://127.0.0.1:49449/bubbles?result_id={}' \
     'in the next 30 seconds to visualize the result' \
