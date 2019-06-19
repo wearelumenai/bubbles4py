@@ -207,3 +207,26 @@ d3.json(`./result/${getResultId()}`).then(
 );
 ```
 
+The following source put everything together,
+create the chart and bind a detail display and a dimension picker :
+```javascript
+let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
+
+const detailDisplay = DetailDisplay(d3.select("#detail"));
+
+function onChartClick(x, y) {
+    const [id] = bubbleChart.getClustersAtPosition(x, y);
+    detailDisplay.detailChanged(id)
+}
+
+const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChange);
+
+function onDimensionChanged(data, dimensions) {
+    bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
+}
+
+d3.json(`./result/${getResultId()}`).then(
+    result => startViz(result, dimensionPicker, detailDisplay)
+);
+```
+
