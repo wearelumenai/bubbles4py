@@ -16,11 +16,14 @@ def start(driver_args, server_name):
     server.wait()
 
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--driver', nargs='+', required=True)
     parser.add_argument('-s', '--server', nargs='+', default=['gunicorn'])
     args = parser.parse_args()
     sys.argv = [sys.argv[0], *args.server[1:]]
-
     start(args.driver, args.server[0])
+
+
+if __name__ == "__main__":
+    main()

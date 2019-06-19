@@ -144,6 +144,51 @@ print(
 server.wait()
 ```
 
+# Customize the storage backend
+
+A storage backend is implemented by a class with the following methods :
+ - `put_result(result)` : store the `result` dict and returns a unique id
+ - `get_result(id)` : returns the result corresponding to the given id
+ 
+```python
+class NoStorage:
+    def __init__(self, *args):
+        raise RuntimeError('Not implemented')
+
+    def put_result(self, result):
+        pass
+        
+    def get_result(self, id):
+        pass
+```
+
+Then the backend can be used directly in the code :
+```python
+from bubbles import Server
+from mystores import NoStore
+
+server = Server(NoStore('aaa', 1))
+server.start()
+server.wait()
+``` 
+
+Or used in a customized runnable module 
+that registers the backend in the `drivers` global :
+```python
+from mystores import NoStore
+from bubbles.drivers import drivers
+from bubbles.__main__ import main
+
+if __name__ == "__main__":
+    drivers['NoStore'] = NoStore
+    main()
+```
+
+Now it can be run as a module :
+```bash
+$ python -m myserver -d NoStore aaa 1
+```
+
 # Customize the visualization
 
 The visualization page can be customized by overriding the ```/bubbles``` 
