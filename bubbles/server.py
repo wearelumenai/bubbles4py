@@ -7,7 +7,6 @@ from multiprocessing import Process
 
 from bottle import Bottle, request, response, static_file
 
-
 _root = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'root')
 
 
@@ -53,6 +52,11 @@ class Server:
     def wait(self):
         self.process.join()
 
+    def route(self, path=None, method='GET', callback=None, name=None,
+              apply=None, skip=None, **config):
+        return self.app.route(path, method, callback, name,
+                              apply, skip, **config)
+
     def _timeout_terminate(self, timeout):
         def _term(timeout):
             time.sleep(timeout)
@@ -66,4 +70,3 @@ class Server:
             self.process.terminate()
 
         signal.signal(signal.SIGINT, _term)
-

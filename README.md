@@ -8,8 +8,8 @@ To run the simple server from command line :
 $ python -m bubbles -d MemDriver
 ```
 
-The -d switch indicates the kind of storage used to store results, 
-here we use the Python program memory to store results.
+The -d switch indicates the kind of backend used to store results, 
+here we use the memory to store results.
 
 Now we can push some clustering result to the server :
 ```bash
@@ -50,7 +50,7 @@ where the result_id was sent back in the response of the POST query above.
 
 ![bubbles]( bubbles.png "bubbles visualization" )
 
-The results can also be stored in Sqlite, in memory :
+The results can also be stored with the Sqlite backend, in memory :
 ```bash
 $ python -m bubbles -d SqliteDriver
 ```
@@ -59,10 +59,50 @@ or persisted to a file :
 $ python -m bubbles -d SqliteDriver results.db
 ```
 
+# Web server configuration
+
+The dataviz service uses [Bottle](https://bottlepy.org/) under the hood, thus
+it can be configured with any WSGI server. When running the service
+from command line as shown above, the default is to use 
+[gunicorn](https://gunicorn.org). It may be configured with a configuration
+file which default name is `gunicorn.conf.py`. Please refer to the
+[gunicorn documentation](http://docs.gunicorn.org/en/stable/configure.html).
+
+It is also possible to change the backend web server and / or its
+configuration on the command line with the `s` option :
+```bash
+$ python -m bubbles -d SqliteDriver results.db -s gunicorn '-c ./myconfig.py'
+```
+The first argument is the name of the server, followed by the command line
+options specific to this server. In the above example, the gunicorn
+configuration file path is set to `./myconfig.py`.
+
+In the following example, the default binding is changed to `localhost:8080` :
+```bash
+$ python -m bubbles -d SqliteDriver -s gunicorn '-b localhost:8080'
+```
+For a list of available servers please refer to
+[bottle documentation](https://bottlepy.org/docs/dev/deployment.html).
 
 # Usage in a Python program
 
-The server can be started in a program. In the following script
+The server can be started in a program.
+First the server is built using the `Server` class by passing the backend
+driver to its constructor.
+```python
+from bubbles import Server
+from bubbles.drivers import MemDriver
+
+server = Server(MemDriver())
+```
+or alternatively :
+```python
+from bubbles import Server
+from bubbles.drivers import SqliteDriver
+
+server = Server(SqliteDriver())
+```
+In the following script
 the server is started in background 
 and the program waits for a SIGINT (Ctrl-C) to end.
 ```python
@@ -109,7 +149,13 @@ server.wait()
 The visualization page can be customized by overriding the ```/bubbles``` 
 route before calling `start` :
 ```python
-server.app.route('/bubbles', method="GET", callback=custom_handler)
+from bubbles import Server
+from bubbles.drivers import SqliteDriver
+
+server = Server(SqliteDriver())
+server.route('/bubbles', method="GET", callback=custom_handler)
+server.start()
+server.wait()
 ```
 
 Useful Javascript library are available at the following URLs :
