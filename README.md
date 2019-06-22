@@ -128,7 +128,7 @@ from bubbles.drivers import MemDriver
 result = {
     'centers': [...],
     'counts': [...],
-    'names': [...],
+    'columns': [...],
 }
 
 driver = MemDriver()

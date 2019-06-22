@@ -1,11 +1,16 @@
 import json
 import sqlite3
 import string
+from datetime import datetime
 from secrets import choice
 
-sql_init = 'CREATE TABLE IF NOT EXISTS results (id PRIMARY KEY, result)'
-sql_put = 'INSERT INTO results VALUES (?, ?)'
-sql_get = 'SELECT result FROM results WHERE id = ?'
+from bubbles.memdriver import _make_record
+
+sql_init = 'CREATE TABLE IF NOT EXISTS results' \
+           '(id PRIMARY KEY, result, name, created)'
+sql_put = 'INSERT INTO results VALUES (?, ?, ?, ?)'
+sql_get_id = 'SELECT result FROM results WHERE id = ?'
+sql_get_start = 'SELECT id, name, created FROM results WHERE created > ?'
 
 
 class SqliteDriver(object):
@@ -39,6 +44,6 @@ class SqliteDriver(object):
         :return: the result
         """
         c = self._conn.cursor()
-        c.execute(sql_get, (result_id,))
+        c.execute(sql_get_id, (result_id,))
         result = c.fetchone()[0]
         return json.loads(result)
