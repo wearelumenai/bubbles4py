@@ -4,7 +4,7 @@ import os
 import signal
 import time
 from datetime import datetime
-from multiprocessing import Process
+from threading import Thread
 
 from bottle import Bottle, request, response, static_file
 
@@ -81,19 +81,21 @@ class Server:
         run forever if None (default)
         :param kwargs: parameters for the backen WSGI server
         """
-        self.process = Process(target=self.app.run, kwargs=kwargs)
+        self.process = Thread(target=self.app.run, kwargs=kwargs)
+        self.process.daemon = True
         self.process.start()
         time.sleep(.1)
         if timeout is not None:
             self._timeout_terminate(timeout)
-        else:
-            self._sigint_terminate()
 
     def wait(self):
         """
         Wait for the server to stop
         """
-        self.process.join()
+        try:
+            self.process.join()
+        except KeyboardInterrupt:
+            pass
 
     def route(self, path=None, method='GET', callback=None, name=None,
               apply=None, skip=None, **config):
@@ -130,17 +132,12 @@ class Server:
     def _timeout_terminate(self, timeout):
         def _term(timeout):
             time.sleep(timeout)
-            self.process.terminate()
+            os.kill(os.getpid(), signal.SIGINT)
             logging.warning('timeout reached, server was terminated')
 
-        Process(target=_term, args=(timeout,)).start()
-
-    def _sigint_terminate(self):
-        def _term(signum, frame):
-            self.process.terminate()
-
-        signal.signal(signal.SIGINT, _term)
-
+        killer = Thread(target=_term, args=(timeout,))
+        killer.daemon = True
+        killer.start()
 
 def _make_response(v):
     r = v.copy()
