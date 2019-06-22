@@ -63,6 +63,7 @@ $ python -m bubbles -d SqliteDriver results.db
 
 url          | method | description | response
 ------------ | ------ | ----------- | --------
+
 `/result`      | POST   | store the result in the body | `{"result_id": <id>}`
 `/result/<result_id>` | GET | get the result which id is `result_id` | result as json object
 `/results?start=<iso_datetime>` | GET | get the results from `iso_datetime` | `{<result_id>:{`<br>`  "meta":<meta>,`<br>`  "created":<created>`<br>`},...}`
@@ -168,10 +169,10 @@ result = {
 }
 
 driver = MemDriver()
-result_id = driver.put_result(result)
 
 server = Server(driver)
 server.start(timeout=30, port=49449)
+result_id = driver.put_result(result)
 print(
     'visit http://127.0.0.1:49449/bubbles?result_id={}' \
     'in the next 30 seconds to visualize the result' \
