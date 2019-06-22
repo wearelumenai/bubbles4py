@@ -152,6 +152,7 @@ def compute_results(driver):
 
 driver = MemDriver()
 server = Server(driver)
+
 server.start()
 compute_results(driver)
 server.wait()
@@ -173,22 +174,19 @@ and avoid resource leaks. For example :
 from bubbles import Server
 from bubbles.drivers import MemDriver
 
-result = {
-    'centers': [...],
-    'counts': [...],
-    'columns': [...],
-}
+def compute_results(driver):
+    result_id = driver.put_result({...})
+    print(
+        'visit http://127.0.0.1:49449/bubbles?result_id={}' \
+        'in the next 30 seconds to visualize the result' \
+        .format(result_id)
+    )
 
 driver = MemDriver()
-
 server = Server(driver)
+
 server.start(timeout=30, port=49449)
-result_id = driver.put_result(result)
-print(
-    'visit http://127.0.0.1:49449/bubbles?result_id={}' \
-    'in the next 30 seconds to visualize the result' \
-    .format(result_id)
-)
+compute_results(driver)
 server.wait()
 ```
 
