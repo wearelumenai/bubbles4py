@@ -63,8 +63,7 @@ $ python -m bubbles -d SqliteDriver results.db
 
 url          | method | description | response
 ------------ | ------ | ----------- | --------
-
-`/result`      | POST   | store the result in the body | `{"result_id": <id>}`
+`/result`    | POST   | store the result in the body | `{"result_id": <id>}`
 `/result/<result_id>` | GET | get the result which id is `result_id` | result as json object
 `/results?start=<iso_datetime>` | GET | get the results from `iso_datetime` | `{<result_id>:{`<br>`  "meta":<meta>,`<br>`  "created":<created>`<br>`},...}`
 
