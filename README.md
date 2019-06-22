@@ -146,16 +146,21 @@ and the program waits for a SIGINT (Ctrl-C) to end.
 from bubbles import Server
 from bubbles.drivers import MemDriver
 
+def compute_results(driver):
+    # compute results and
+    # add them to driver
+    pass
 
 driver = MemDriver()
 server = Server(driver)
 server.start()
-# compute_results(driver)
+compute_results(driver)
 server.wait()
 ```
 Between calls of `start` and `wait` results
 can be added to the driver, they will
-be available to the server. 
+be available to the server. Of course
+results can still be added through the REST API.
 
 It is possible to change host and port used by the server :
 ```python
