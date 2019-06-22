@@ -92,7 +92,7 @@ For example if the following result was posted:
 The `/results` query would return:
 ```
 $ curl -XGET 'http://localhost:44030/results?start=2019-04-29T18:01:00'
-{"dliswriovikznyiqyspbmclacccxftbt": {"created": "2019-06-22T10:26:32.065689", "meta": {"name": "bubbles4py", "size": 8}}}
+{"dzhbvyjitudwacbuowebgrahfixmtcvp": {"created": "2019-06-22T10:26:32.065689", "meta": {"name": "bubbles4py", "size": 8}}}
 ```
 
 # Web server configuration
