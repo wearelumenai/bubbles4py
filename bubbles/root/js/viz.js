@@ -1,20 +1,20 @@
 function DetailDisplay(container) {
     let centers;
-    let names;
+    let columns;
 
     function _init(config) {
-        ({centers, names} = config);
+        ({centers, columns} = config);
         container.append("p").classed("caption", true);
         container
             .selectAll("div")
-            .data(names)
+            .data(columns)
             .enter()
             .append("div")
             .html('<div></div><div></div>');
     }
 
     async function detailChanged(id) {
-        const data = centers[id].map((c, i) => [names[i], c]);
+        const data = centers[id].map((c, i) => [columns[i], c]);
         container.classed("active", true);
         container.selectAll("p")
             .data([id])
@@ -31,10 +31,10 @@ function DetailDisplay(container) {
 
 function DimensionPicker(container, update) {
     let centers;
-    let names;
+    let columns;
 
     function _init(config) {
-        ({centers, names} = config);
+        ({centers, columns} = config);
         container.selectAll('div.dim-picker').data([
             {id: 'select-s', label: 'Size'},
             {id: 'select-c', label: 'Color'},
@@ -44,7 +44,7 @@ function DimensionPicker(container, update) {
             .append('div')
             .lower()
             .html(d => `<label for="${d.id}">${d.label}</label><select id="${d.id}"></select>`);
-        const current = {x: 0, y: 1, c: 2, s: names.length - 1};
+        const current = {x: 0, y: 1, c: 2, s: columns.length - 1};
         loadOptions(current, 'x');
         loadOptions(current, 'y');
         loadOptions(current, 'c');
@@ -60,7 +60,7 @@ function DimensionPicker(container, update) {
                 dimensionChanged(current);
             })
             .selectAll('option')
-            .data(names)
+            .data(columns)
             .enter()
             .append('option')
             .property('selected', (_, i) => i === current[dim])
@@ -69,7 +69,7 @@ function DimensionPicker(container, update) {
 
     async function dimensionChanged({x, y, c, s}) {
         const data = centers.map(r => [r[x], r[y], r[c], r[s]]);
-        const dimensions = {"x": names[x], "y": names[y], "color": names[c], "area": names[s]};
+        const dimensions = {"x": columns[x], "y": columns[y], "color": columns[c], "area": columns[s]};
         update(data, dimensions);
     }
 
@@ -77,10 +77,10 @@ function DimensionPicker(container, update) {
 }
 
 function startViz(result, dimensionPicker, detailsDisplay) {
-    const names = result.names.concat(['counts']);
+    const columns = result.columns.concat(['counts']);
     const centers = result.centers.map((r, i) => r.concat([result.counts[i]]));
-    dimensionPicker._init({centers, names});
-    detailsDisplay._init({centers, names})
+    dimensionPicker._init({centers, columns});
+    detailsDisplay._init({centers, columns})
 }
 
 function getResultId() {
