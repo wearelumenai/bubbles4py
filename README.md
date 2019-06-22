@@ -59,6 +59,18 @@ or persisted to a file :
 $ python -m bubbles -d SqliteDriver results.db
 ```
 
+# Server API
+
+url          | method | description | response
+------------ | ------ | ----------- | --------
+`/result`      | POST   | store the result in the body | `{"result_id": <id>}`
+`/result/<result_id>` | GET | get the result which id is `result_id` | result as json object
+`/results?start=<iso_datetime>` | GET | get the results from `iso_datetime` | `{<result_id>:{"meta":<meta>,"created":<created>},...}]`
+
+If a result posted to the server contains a `meta` field, this value is
+stored in the metadata of the result. The metadata is returned in the 
+response of the `/results` query.
+
 # Web server configuration
 
 The dataviz service uses [Bottle](https://bottlepy.org/) under the hood, thus

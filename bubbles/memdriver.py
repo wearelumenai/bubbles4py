@@ -22,7 +22,7 @@ class MemDriver:
         """
         result_id = ''.join(choice(string.ascii_lowercase) for i in range(32))
         with self._mu:
-            self.results[result_id] = result
+            self.results[result_id] = _make_record(result)
         return result_id
 
     def get_result(self, result_id):
@@ -32,4 +32,23 @@ class MemDriver:
         :return: the result
         """
         with self._mu:
-            return self.results[result_id]
+            return self.results[result_id]['result']
+
+    def get_results(self, start=None):
+        return {
+            k: _make_meta(v)
+            for k, v in self.results.items()
+            if start is None or v['created'] > start
+        }
+
+
+def _make_record(result):
+    return {
+        'result': result,
+        'created': datetime.now(),
+        'meta': result.get('meta')
+    }
+
+
+def _make_meta(record):
+    return {k: v for k, v in record.items() if k != 'result'}

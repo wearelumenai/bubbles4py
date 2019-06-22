@@ -32,7 +32,13 @@ class SqliteDriver(object):
         """
         result_id = ''.join(choice(string.ascii_lowercase) for i in range(32))
         c = self._conn.cursor()
-        c.execute(sql_put, (result_id, json.dumps(result)))
+        binds = (
+            result_id,
+            json.dumps(result),
+            result.get('meta'),
+            datetime.now()
+        )
+        c.execute(sql_put, binds)
         return result_id
 
     def get_result(self, result_id):
@@ -45,3 +51,16 @@ class SqliteDriver(object):
         c.execute(sql_get_id, (result_id,))
         result = c.fetchone()[0]
         return json.loads(result)
+
+    def get_results(self, start=None):
+        if start is None:
+            start = datetime.min
+        c = self._conn.cursor()
+        c.execute(sql_get_start, (start,))
+        meta = {}
+        for row in c.fetchall():
+            meta[row[0]] = {
+                'meta': row[1],
+                'created': row[2],
+            }
+        return meta

@@ -23,7 +23,8 @@ class TestServer(unittest.TestCase):
                 [38.05, 0.47, 0.59, 2.86, 12.44, 0.98, 2.38, 32.3],
             ],
             'counts': [35513, 30320, 15310, 5792, 8119, 11805, 5739, 3708],
-            'names': ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit']
+            'columns': ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit'],
+            'meta': 'test'
         }
         self.driver = MemDriver()
         self.server = Server(self.driver)
@@ -42,3 +43,15 @@ class TestServer(unittest.TestCase):
         r_get = self.app.get('/result/{}'.format(result_id))
         self.assertEqual(200, r_get.status_code)
         self.assertEqual(self.result, r_get.json)
+
+    def test_get_results(self):
+        id1 = self.driver.put_result(self.result)
+        time.sleep(.5)
+        id2 = self.driver.put_result(self.result)
+        start = (datetime.now() - timedelta(seconds=.3)).isoformat()
+        r_get = self.app.get('/results?start={}'.format(start))
+        self.assertEqual(200, r_get.status_code)
+        results = r_get.json
+        self.assertEqual(1, len(results))
+        self.assertIn(id2, results)
+        self.assertEqual('test', results[id2]['meta'])

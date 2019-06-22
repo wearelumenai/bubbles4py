@@ -15,7 +15,7 @@ result = {
         [38.05, 0.47, 0.59, 2.86, 12.44, 0.98, 2.38, 32.3],
     ],
     'counts': [35513, 30320, 15310, 5792, 8119, 11805, 5739, 3708],
-    'names': ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit']
+    'columns': ['lorem', 'ipsum', 'dolor', 'sit', 'amet', 'consectetur', 'adipiscing', 'elit']
 }
 
 driver = MemDriver()

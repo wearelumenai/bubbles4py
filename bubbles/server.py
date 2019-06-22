@@ -3,6 +3,7 @@ import logging
 import os
 import signal
 import time
+from datetime import datetime
 from multiprocessing import Process
 
 from bottle import Bottle, request, response, static_file
@@ -22,6 +23,7 @@ class Server:
         self.app = Bottle()
         self.app.route('/result', method='POST', callback=self.post_result)
         self.app.route('/result/<result_id>', method='GET', callback=self.get_result)
+        self.app.route('/results', method='GET', callback=self.get_results)
         self.app.route('/bubbles', method='GET', callback=Server.get_bubbles)
         self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
         self.process = None
@@ -45,6 +47,15 @@ class Server:
         :return: the result as a dict
         """
         return self.driver.get_result(result_id)
+
+    def get_results(self):
+        start = request.query.get('start')
+        if start is not None:
+            start = datetime.fromisoformat(start)
+        results = self.driver.get_results(start)
+        return {k: _make_response(v)
+                for k, v in results.items()
+                }
 
     @staticmethod
     def get_bubbles():
@@ -129,3 +140,9 @@ class Server:
             self.process.terminate()
 
         signal.signal(signal.SIGINT, _term)
+
+
+def _make_response(v):
+    r = v.copy()
+    r['created'] = v['created'].isoformat()
+    return r
