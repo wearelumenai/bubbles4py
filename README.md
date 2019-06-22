@@ -148,7 +148,7 @@ from bubbles.drivers import MemDriver
 def compute_results(driver):
     # compute results and
     # add them to driver
-    pass
+    driver.put_result({...})
 
 driver = MemDriver()
 server = Server(driver)
