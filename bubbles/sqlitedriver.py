@@ -7,10 +7,10 @@ from secrets import choice
 from bubbles.memdriver import _make_record
 
 sql_init = 'CREATE TABLE IF NOT EXISTS results' \
-           '(id PRIMARY KEY, result, name, created)'
+           '(id PRIMARY KEY, result, meta, created)'
 sql_put = 'INSERT INTO results VALUES (?, ?, ?, ?)'
 sql_get_id = 'SELECT result FROM results WHERE id = ?'
-sql_get_start = 'SELECT id, name, created FROM results WHERE created > ?'
+sql_get_start = 'SELECT id, meta, created FROM results WHERE created > ?'
 
 
 class SqliteDriver(object):
