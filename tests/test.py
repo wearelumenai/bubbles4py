@@ -23,7 +23,7 @@ server = Server(driver)
 port = randint(44001, 44999)
 
 if __name__ == "__main__":
-    server.start(timeout=4, port=port, quiet=True)
+    server.start(port=port, quiet=True)
 
     result_id = driver.put_result(result)
     print('http://localhost:{}/bubbles?result_id={}'.format(port, result_id))

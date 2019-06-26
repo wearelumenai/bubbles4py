@@ -11,5 +11,8 @@ setup(
     license='',
     author='',
     author_email='',
-    description=''
+    description='',
+    package_data={
+        'bubbles': ['root/*', 'root/js/*']
+    }
 )

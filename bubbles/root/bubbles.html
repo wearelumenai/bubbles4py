@@ -32,9 +32,13 @@
         bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
     }
 
-    d3.json(`./result/${getResultId()}`).then(
-        result => startViz(result, dimensionPicker, detailsDisplay)
-    );
+    function go() {
+        d3.json(`./result/${getResultId()}`).then(
+            result => startViz(result, dimensionPicker, detailsDisplay)
+        );
+    }
+    go()
+    setInterval(go, 2000)
 </script>
 <style>
     #main {
