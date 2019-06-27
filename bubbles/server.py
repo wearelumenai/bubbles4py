@@ -88,14 +88,11 @@ class Server:
         if timeout is not None:
             self._timeout_terminate(timeout)
 
-    def wait(self):
+    def join(self):
         """
         Wait for the server to stop
         """
-        try:
-            self.process.join()
-        except KeyboardInterrupt:
-            pass
+        self.process.join()
 
     def route(self, path=None, method='GET', callback=None, name=None,
               apply=None, skip=None, **config):

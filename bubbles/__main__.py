@@ -13,7 +13,10 @@ def start(driver_args, server_name):
     driver = get_driver(*driver_args)
     server = Server(driver)
     server.start(server=server_name, port=49449, quiet=True)
-    server.wait()
+    try:
+        server.join()
+    except KeyboardInterrupt:
+        pass
 
 
 def main():

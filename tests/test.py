@@ -27,4 +27,7 @@ if __name__ == "__main__":
 
     result_id = driver.put_result(result)
     print('http://localhost:{}/bubbles?result_id={}'.format(port, result_id))
-    server.wait()
+    try:
+        server.join()
+    except KeyboardInterrupt:
+        pass

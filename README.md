@@ -155,7 +155,7 @@ server = Server(driver)
 
 server.start()
 compute_results(driver)
-server.wait()
+server.join()
 ```
 Between calls of `start` and `wait` results
 can be added to the driver, they will
@@ -187,7 +187,7 @@ server = Server(driver)
 
 server.start(timeout=30, port=49449)
 compute_results(driver)
-server.wait()
+server.join()
 ```
 
 # Customize the storage backend
@@ -215,7 +215,7 @@ from mystores import NoStore
 
 server = Server(NoStore('aaa', 1))
 server.start()
-server.wait()
+server.join()
 ``` 
 
 Or used in a customized runnable module 
@@ -246,7 +246,7 @@ from bubbles.drivers import SqliteDriver
 server = Server(SqliteDriver())
 server.route('/bubbles', method="GET", callback=custom_handler)
 server.start()
-server.wait()
+server.join()
 ```
 
 Useful Javascript library are available at the following URLs :
