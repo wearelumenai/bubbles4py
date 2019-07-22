@@ -11,9 +11,9 @@
 <body>
 <div id="main">
     <div id="board">
-        <div class="sbs" id="command"></div>
+        <div class="command" id="command"></div>
         <button onclick="window.open('', '_self', ''); window.close();">Close</button>
-        <div class="sbs" id="detail"></div>
+        <div id="detail"></div>
     </div>
     <div id="viz" style="width: 900px; height: 600px"></div>
 </div>
@@ -50,15 +50,15 @@
         position: relative;
     }
 
-    .sbs {
+    .command {
         display: table;
     }
 
-    .sbs div {
+    .command div {
         display: table-row;
     }
 
-    .sbs div * {
+    .command div * {
         display: table-cell;
         padding-bottom: .5em;
         padding-right: .5em;
@@ -97,8 +97,15 @@
     }
 
     #detail .caption {
-        display: table-caption;
+        text-align: left;
         text-decoration: underline;
+        font-weight: 700;
+        padding-bottom: 5px;
+    }
+
+    #detail .values {
+        max-height: 25em;
+        overflow-y: scroll;
     }
 
     .cluster {

@@ -6,13 +6,24 @@ function DetailDisplay(container) {
     function _init(config) {
         if (!initialized) {
             ({centers, columns} = config);
-            container.append("p").classed("caption", true);
-            container
-                .selectAll("div")
+            let detailTable = container.append("table")
+                .style("width", "100%");
+            detailTable.append("caption")
+                .classed("caption", true);
+            let detailBody = detailTable.append("tbody")
+                .classed("values", true)
+                .style("display", "block")
+                .style("overflow", "scroll")
+                .style("width", "100%");
+            detailBody
+                .selectAll("tr")
                 .data(columns)
                 .enter()
-                .append("div")
-                .html('<div></div><div></div>');
+                .append("tr")
+                .style("display", "table")
+                .style("table-layout", "fixed")
+                .style("width", "100%")
+                .html('<td></td><td></td>');
             initialized = true;
         }
     }
@@ -20,12 +31,12 @@ function DetailDisplay(container) {
     async function detailChanged(id) {
         const data = centers[id].map((c, i) => [columns[i], c]);
         container.classed("active", true);
-        container.selectAll("p")
+        container.selectAll(":scope > table > caption")
             .data([id])
             .text(`cluster ${id} details:`);
-        container.selectAll(":scope > div")
+        container.selectAll(":scope > table > tbody > tr")
             .data(data)
-            .selectAll("div")
+            .selectAll("td")
             .data(d => d)
             .text(d => d);
     }
