@@ -22,7 +22,7 @@ def start(driver_args, server_name):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--driver', nargs='+', required=True)
-    parser.add_argument('-s', '--server', nargs='+', default=['gunicorn'])
+    parser.add_argument('-s', '--server', nargs='+', default=['paste'])
     args = parser.parse_args()
     sys.argv = [sys.argv[0], *args.server[1:]]
     start(args.driver, args.server[0])

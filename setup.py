@@ -6,6 +6,7 @@ setup(
     packages=['bubbles'],
     install_requires=[
           'bottle',
+          'paste'
     ],
     url='',
     license='',
