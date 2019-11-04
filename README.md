@@ -33,7 +33,7 @@ Content-Length: 49
 {"result_id": "dzhbvyjitudwacbuowebgrahfixmtcvp"}
 ```
 
-The file ```result.json``` contains json data that mus conform to the 
+The file ```result.json``` contains json data that must conform to the 
 following :
 
 ```json
