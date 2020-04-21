@@ -93,8 +93,14 @@ function DimensionPicker(container, update) {
         const dimensions = {"x": columns[x], "y": columns[y], "color": columns[c], "area": columns[s]};
         update(data, dimensions);
     }
+    function update_centers(column, centers){
+        const {x, y, c, s} = current;
+        const data = centers.map(r => [r[x], r[y], r[c], r[s]]);
+        const dimensions = {"x": columns[x], "y": columns[y], "color": columns[c], "area": columns[s]};
+        update(data, dimensions)
+    }
 
-    return {_init}
+    return {_init, update_centers}
 }
 
 function startViz(result, dimensionPicker, detailsDisplay) {
@@ -103,6 +109,17 @@ function startViz(result, dimensionPicker, detailsDisplay) {
     const current = {x: 0, y: 1, c: 2, s: columns.length - 1};
     dimensionPicker._init({centers, columns, current});
     detailsDisplay._init({centers, columns, current})
+}
+
+function update_centroids(result, dimensionPicker) {
+    const columns = result.columns.concat(['counts']);
+    const centers = result.centers.map((r, i) => r.concat([result.counts[i]]));
+    dimensionPicker.update_centers(columns, centers)
+    /*
+    const {x, y, c, s} = dimensionPicker.current;
+    const data = centers.map(r => [r[x], r[y], r[c], r[s]]);
+    const dimensions = {"x": columns[x], "y": columns[y], "color": columns[c], "area": columns[s]};
+    dimensionPicker.update(data, dimensions);*/
 }
 
 function getResultId() {

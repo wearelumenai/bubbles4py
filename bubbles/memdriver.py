@@ -25,6 +25,10 @@ class MemDriver:
             self.results[result_id] = _make_record(result)
         return result_id
 
+    def put_result_id(self, result, result_id):
+        with self._mu:
+            self.results[result_id] = _make_record(result)
+ 
     def get_result(self, result_id):
         """
         Get a result in memory from its unique identifier
