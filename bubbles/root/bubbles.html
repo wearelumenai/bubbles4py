@@ -39,32 +39,14 @@
         );
     }
     function update() {
-	console.log("in update");
-	d3.json(`./result/${getResultId()}`).then(
-	  result => update_centroids(result, dimensionPicker)
-	  );
-	/*
-        const columns = result.columns.concat(['counts']);
-        const centers = result.centers.map((r, i) => r.concat([result.counts[i]]));
-        const {x, y, c, s} = dimensionPicker.current;
-        const data = centers.map(r => [r[x], r[y], r[c], r[s]]);
-	const dimensions = {"x": columns[x], "y": columns[y], "color": columns[c], "area": columns[s]};
-        onDimensionChanged(data, dimensions);
-	);
-	 every 3 secs: update:
-    const columns = result.columns.concat(['counts']);
-    const centers = result.centers.map((r, i) => r.concat([result.counts[i]]));
-    I shall get the real current
-    const current = {x: 0, y: 1, c: 2, s: columns.length - 1};
-        const {x, y, c, s} = current;
-        const data = centers.map(r => [r[x], r[y], r[c], r[s]]);
-        const dimensions = {"x": columns[x], "y": columns[y], "color": columns[c], "area": columns[s]};
-        //update(data, dimensions);
-    bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
-*/
+        console.log("in update");
+        d3.json(`./result/${getResultId()}`).then(
+          result => update_centroids(result, dimensionPicker)
+          );
     }
+
     go()
-    console.log("here");
+    //setInterval(go, 2000)
     setInterval(update, 2000)
 </script>
 <style>

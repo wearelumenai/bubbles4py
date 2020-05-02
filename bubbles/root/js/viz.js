@@ -111,19 +111,13 @@ function startViz(result, dimensionPicker, detailsDisplay) {
     detailsDisplay._init({centers, columns, current})
 }
 
-function update_centroids(result, dimensionPicker) {
-    const columns = result.columns.concat(['counts']);
-    const centers = result.centers.map((r, i) => r.concat([result.counts[i]]));
-    dimensionPicker.update_centers(columns, centers)
-    /*
-    const {x, y, c, s} = dimensionPicker.current;
-    const data = centers.map(r => [r[x], r[y], r[c], r[s]]);
-    const dimensions = {"x": columns[x], "y": columns[y], "color": columns[c], "area": columns[s]};
-    dimensionPicker.update(data, dimensions);*/
-}
-
 function getResultId() {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get('result_id');
 }
 
+function update_centroids(result, dimensionPicker) {
+    const columns = result.columns.concat(['counts']);
+    const centers = result.centers.map((r, i) => r.concat([result.counts[i]]));
+    dimensionPicker.update_centers(columns, centers)
+}

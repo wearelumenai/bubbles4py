@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/home/paul/programmation/lumenai/bubbles4py/')
+
 from random import randint
 
 from bubbles.drivers import MemDriver
