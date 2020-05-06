@@ -17,6 +17,9 @@
     </div>
     <div id="viz" style="width: 900px; height: 600px"></div>
 </div>
+<div id="levels">
+</div>
+
 </body>
 <script>
     let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
@@ -26,6 +29,7 @@
     function onChartClick(x, y) {
         const [id] = bubbleChart.getClustersAtPosition(x, y);
         detailsDisplay.detailChanged(id)
+        //d3.json(`detail_community/${id}`
     }
 
     function onDimensionChanged(data, dimensions) {
@@ -45,11 +49,48 @@
           );
     }
 
+    function update_levels(num_levels){
+	if(num_levels.num_of_levels > 0){
+        levels = ''
+        var i
+        for(i=1; i<=num_levels.num_of_levels; i++){
+            levels += '<button class="btn " onclick="select_level('+i+')" >level '+i+'</button>'
+        }
+	levels += ' </br> you are at the hierarchy number '+num_levels.cur_level + ' with '+ num_levels.num_of_com + 'communuties'
+	//document.getElementById('levels').innerHTML = "number of levels " + num_levels.num_of_levels;
+        document.getElementById('levels').innerHTML = levels;
+	}
+    }
+
+    function select_level(level){
+	console.log("in select_level")
+	console.log(level)
+        d3.json(`./set_level/${level}`).then(
+			result => update_levels(result)
+			);
+    }
+
+    function numlevels(){
+	    d3.json(`./numlevels`).then(
+			    result => update_levels(result)
+			    );
+    }
     go()
     //setInterval(go, 2000)
     setInterval(update, 2000)
+    setInterval(numlevels, 2000)
 </script>
 <style>
+
+.btn {
+  border: none;
+  color: white;
+  padding: 5px 5px;
+  font-size: 32px;
+  cursor: pointer;
+}
+
+
     #main {
         display: flex;
         padding: 20px;

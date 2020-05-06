@@ -24,10 +24,32 @@ class Server:
         self.app.route('/result', method='POST', callback=self.post_result)
         self.app.route('/result/<result_id>', method='GET', callback=self.get_result)
         self.app.route('/results', method='GET', callback=self.get_results)
+        self.app.route('/numlevels', method='GET', callback=self.numlevels)
+        self.app.route('/set_level/<level>', method='GET', callback=self.set_level)
         self.app.route('/bubbles', method='GET', callback=Server.get_bubbles)
         self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
         self.process = None
 
+    def numlevels(self):
+        if getattr(self.driver, "get_num_levels", None):
+            num_of_levels, cur_level, num_of_com = self.driver.get_num_levels()
+            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com}
+        else:
+            num_of_levels = 0
+            result = {"num_of_levels": num_of_levels}
+        return result
+
+    def set_level(self, level):
+        if getattr(self.driver, "set_level", None):
+            print("on set_level, server")
+            num_of_levels, cur_level, num_of_com = self.driver.set_level(level)
+            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com}
+        else:
+            num_of_levels = 0
+            result = {"num_of_levels": num_of_levels}
+        return result
+
+ 
     def post_result(self):
         """
         Callback used to store a result on a POST request
