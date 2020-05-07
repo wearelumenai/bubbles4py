@@ -11,8 +11,7 @@ import threading
 import networkx as nx
 from scipy.spatial import distance
 from munkres import Munkres
-from statistics import mode 
-
+from scipy import stats as s
 
 url = "amqp://mclouvain:mcl@localhost:5672/"
 json_file_containing_tweet = '/home/paul/programmation/lumenai/bubbles4py/elyzee_small_test_graph.json'
@@ -43,7 +42,10 @@ class GrphclusRedisDriver:
         self.common_words = data['common_words']
         self.graph = nx.Graph() # will store all the edges sent to grphclus, and is used to compute statistics about the data sent when doing the bubble visualisation 
         self.last_centroids = []
+        self.last_keys = []
         self.communities = {}
+        self.com_id = -1
+        self.last_date = "year 0"
         if send_edge:
             x = threading.Thread(target=self.send_tweets, args=(data['edges'],), daemon=True)
             x.start()
@@ -64,15 +66,16 @@ class GrphclusRedisDriver:
         print("in set_level")
         r = redis.Redis(host='localhost', port=26611, db=0)
         graphIDs = r.lrange('graphIDs',0, -1)
+        self.com_id = -1
         tot_levels = len(graphIDs)
         assert level <= tot_levels
         self.level = level
         self.get_communities()
-        return len(graphIDs), self.level, len(self.communities)
+        return len(graphIDs), self.level, len(self.communities), self.com_id
 
     def put_result_id(self, result, result_id):
         """
-        no implementation, because the redis database is filled by grphclus
+        no implementation, the redis database is filled by grphclus
         """
         return {}
  
@@ -80,7 +83,7 @@ class GrphclusRedisDriver:
         r = redis.Redis(host='localhost', port=26611, db=0)
         graphIDs = r.lrange('graphIDs',0, -1)
         num_of_com = len(self.communities)
-        return len(graphIDs), self.level, num_of_com
+        return len(graphIDs), self.level, num_of_com, self.com_id
    
     def get_communities_lev(self, level):
         metadataDbID, graphDbID, CommunityDbID, mappingDbID = (level - 1)*4 + 1,  (level - 1)*4 + 2, (level - 1)*4 + 3, (level - 1)*4 + 4
@@ -126,27 +129,73 @@ class GrphclusRedisDriver:
         self.communities = dict([ (com_id, members) for (com_ic, members) in communities.items() if len(members) > 5 ]) # because there are dozens of annoying communities with one member.        
         """
 
+
+    def get_community_detail(self):
+        metadataDbID = (1 - 1)*4 + 1 # metadataDbID of the first layer contains the node id
+        rmeta = redis.Redis(host='localhost', port=redis_port, db=metadataDbID)
+        node2twitterID = dict( [ (int(rmeta.get(k)),k) for k in rmeta.keys('*') if k.isdigit() ])
+
+        # get the communities for the level in which we are interested
+        self.communities = self.get_communities_lev(self.level)
+        print(len(self.last_keys), self.com_id, self.last_keys)
+        com_key_id = self.last_keys[self.com_id]
+        if com_key_id not in self.communities: # the queried community does not exist anymore
+            self.com_id = -1 
+            self.get_communities()
+            return
+        else:
+            com_to_keep = self.communities[com_key_id]
+            communities = self.get_communities_lev(self.level - 1) # take the community of the level below
+            print('the community id of the minus 1 level', communities.keys())
+            self.communities = dict([ (k,v) for (k,v) in communities.items() if k in com_to_keep]) # among them, keep the ones which belong to the community com_key_id of the above level
+            print('I have kept',self.communities.keys(),'communities over', com_to_keep)
+            for level in range(self.level -2, 0, -1):
+                # get the communities of the levels below, down to the actual nodes of the graph
+                com_this_level = self.get_communities_lev(level)
+                for k, v in self.communities.items():
+                    a = set()
+                    a.update(*[ com_this_level[node] for node in v if node in com_this_level ])
+                    self.communities[k] = a
+
+        # there is an interesting fact here, the set of keys between the construction of node2twitter and communities may be different, because, some new edges might have been added to the redis database meanwhile
+        for (k,v) in self.communities.items():
+            self.communities[k] = set([node2twitterID[n] for n in v if n in node2twitterID])
+        self.communities = dict([(k,v) for (k,v) in self.communities.items() if len(v) > 5 ]) 
+
+
+
     def get_result(self, result_id):
         """
         Ignoring the result_id actually, just read what is in the redis database 
         """
-        self.get_communities()
+        if self.com_id == -1 or self.level == 1:
+            self.get_communities()
+        else:
+            self.get_community_detail()
+
         columns, centroids = self.get_centroids2(self.communities)
         if len(self.last_centroids) != 0:
           ordering = remap_centroids(centroids, self.last_centroids)
         else:
           ordering = sorted(centroids.keys())
         centroids = [ centroids[k] for k in ordering ]
-        self.last_centroids = centroids
+        self.last_centroids = copy.deepcopy(centroids)
+        if self.com_id == -1:
+            self.last_keys = ordering
 
         # adding the affiliations, could have done it in the getcentroids function, but anyway.
         for i, cid in enumerate(ordering):
-            affiliations = [ a for n in self.communities[cid] for a in party_to_cat[self.graph.nodes[n]['affiliation']] if 'affiliation' in self.graph.nodes[n]]
-            if len(affiliations)>0:
-                affiliation = mode(affiliations)
-            else:
-                affiliation = 1
-            centroids[i].append(affilitation)
+          # collect all the affiliations for this community
+          affiliations = []
+          for n in self.communities[cid]:
+            if 'affiliation' in self.graph.nodes[n]:
+              affiliations += [ party_to_cat[a] for a in self.graph.nodes[n]['affiliation'] ] 
+          # take the most common one if there are any
+          if len(affiliations)>0:
+            affiliation = int(s.mode(affiliations)[0]) #mode(affiliations)
+          else:
+            affiliation = 1
+          centroids[i].append(affiliation)
         columns.append('affiliation')
 
         result = {}
@@ -159,6 +208,12 @@ class GrphclusRedisDriver:
         #print('the centroids:', result['centers'])
         with self._mu:
             return result #self.results[result_id]['result']
+
+
+    def detail_community(self, com_id):
+        self.com_id = int(com_id)
+        print('setting the detail on community',self.com_id)
+        return self.get_result(0) 
 
     def get_results(self, start=None):
         return {
@@ -209,6 +264,8 @@ class GrphclusRedisDriver:
             self.graph.nodes[author]['affiliation'] = []
         self.graph.nodes[author]['affiliation'].append(twitterActivity['edge_affiliation'])
         
+    def get_last_date(self):
+        return self.last_date
 
     def send_tweets(self, edges):
         # sort the edges
@@ -222,14 +279,14 @@ class GrphclusRedisDriver:
         # sending the edges to grphclus
         for i, twitter_activity in enumerate(edges):
             self.add_edge(twitter_activity)
+            self.last_date = twitter_activity['created_at']
             start = twitter_activity['source']
             end = twitter_activity['target']
             body = '[[Edges]]\nstart = "'+start+'"\nweight = 1.0\nend = "'+end+'"\nreltype = "type"\ncontent = "content"\ntimestamp = 1576794545000' # yeah content and timestamp are not used
             return_mess =  channel.basic_publish(exchange='', routing_key='Edges', body=body, mandatory=True)
             # add the edge sent to the driver Graph.
             if i%1000 == 0:
-                print('sent', i, 'edges over',len(edges))            
-                print("Sent body", return_mess)
+                print('sent', i, 'edges over',len(edges), 'the result is', return_mess)            
                 time.sleep(2) # just to go slowly, I have a small computer 
 
     def get_centroids2(self, communities):
@@ -250,7 +307,7 @@ class GrphclusRedisDriver:
             centroid = []
             for j in range(len(key_topics)): #idx_lowest_entropies:
               centroid.append(com_embed[j,i])
-            centroids[k] = centroid
+            centroids[k] = [c/(sum(centroid)+0.1) for c in centroid]  #centroid
         return copy.copy(key_topics), centroids # return a copy to prevent someone to modify this list
 
 

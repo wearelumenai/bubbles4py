@@ -19,6 +19,11 @@
 </div>
 <div id="levels">
 </div>
+</br>
+</br>
+<div id="last_date">
+	WTF?
+</div>
 
 </body>
 <script>
@@ -29,7 +34,9 @@
     function onChartClick(x, y) {
         const [id] = bubbleChart.getClustersAtPosition(x, y);
         detailsDisplay.detailChanged(id)
-        //d3.json(`detail_community/${id}`
+        d3.json(`detail_community/${id}`).then(
+	    result => update_centroids(result, dimensionPicker)
+	    );
     }
 
     function onDimensionChanged(data, dimensions) {
@@ -51,6 +58,7 @@
 
     function update_levels(num_levels){
 	if(num_levels.num_of_levels > 0){
+	if(num_levels.com_id == -1){
         levels = ''
         var i
         for(i=1; i<=num_levels.num_of_levels; i++){
@@ -59,6 +67,17 @@
 	levels += ' </br> you are at the hierarchy number '+num_levels.cur_level + ' with '+ num_levels.num_of_com + 'communuties'
 	//document.getElementById('levels').innerHTML = "number of levels " + num_levels.num_of_levels;
         document.getElementById('levels').innerHTML = levels;
+	}
+	else{
+        levels = ''
+        var i
+        for(i=1; i<=num_levels.num_of_levels; i++){
+            levels += '<button class="btn " onclick="select_level('+i+')" >level '+i+'</button>'
+        }
+        levels += ' </br> you are checking the community '+num_levels.num_of_levels+' of the level '+num_levels.cur_level + ' with '+ num_levels.num_of_com + 'sub communuties'
+        //document.getElementById('levels').innerHTML = "number of levels " + num_levels.num_of_levels;
+        document.getElementById('levels').innerHTML = levels;        
+        }
 	}
     }
 
@@ -69,16 +88,26 @@
 			result => update_levels(result)
 			);
     }
+    function update_date(result){
+	    last_date = 'We are now the ' + result.last_date
+            document.getElementById('last_date').innerHTML = last_date
+    }
 
     function numlevels(){
 	    d3.json(`./numlevels`).then(
 			    result => update_levels(result)
 			    );
     }
+    function last_date(){
+	    d3.json(`./last_date`).then(
+			    result => update_date(result)
+			    );
+    }
     go()
     //setInterval(go, 2000)
     setInterval(update, 2000)
     setInterval(numlevels, 2000)
+    setInterval(last_date, 2000)
 </script>
 <style>
 

@@ -25,15 +25,25 @@ class Server:
         self.app.route('/result/<result_id>', method='GET', callback=self.get_result)
         self.app.route('/results', method='GET', callback=self.get_results)
         self.app.route('/numlevels', method='GET', callback=self.numlevels)
+        self.app.route('/detail_community/<com_id>', method='GET', callback=self.detail_community)
         self.app.route('/set_level/<level>', method='GET', callback=self.set_level)
+        self.app.route('/last_date', method='GET', callback=self.last_date)
         self.app.route('/bubbles', method='GET', callback=Server.get_bubbles)
         self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
+
         self.process = None
+
+    def last_date(self):
+        return {'last_date': self.driver.get_last_date()}
+
+    def detail_community(self, com_id):
+        if getattr(self.driver, "detail_community", None):
+            return self.driver.detail_community(com_id)
 
     def numlevels(self):
         if getattr(self.driver, "get_num_levels", None):
-            num_of_levels, cur_level, num_of_com = self.driver.get_num_levels()
-            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com}
+            num_of_levels, cur_level, num_of_com, com_id = self.driver.get_num_levels()
+            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com, "com_id": com_id}
         else:
             num_of_levels = 0
             result = {"num_of_levels": num_of_levels}
@@ -42,8 +52,8 @@ class Server:
     def set_level(self, level):
         if getattr(self.driver, "set_level", None):
             print("on set_level, server")
-            num_of_levels, cur_level, num_of_com = self.driver.set_level(level)
-            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com}
+            num_of_levels, cur_level, num_of_com, com_id = self.driver.set_level(level)
+            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com, "com_id": com_id}
         else:
             num_of_levels = 0
             result = {"num_of_levels": num_of_levels}
