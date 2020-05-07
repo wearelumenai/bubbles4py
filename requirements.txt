@@ -1,3 +1,10 @@
 gunicorn
 paste
 bottle
+redis
+pika
+threading
+networkx
+scipy
+munkres
+
