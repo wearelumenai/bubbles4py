@@ -319,3 +319,16 @@ d3.json(`./result/${getResultId()}`).then(
 );
 ```
 
+# With docker
+
+## Registry
+
+An image is available at https://docker.pkg.github.com/wearelumenai/bubbles4py/bubbles4py
+
+## Files
+
+`Dockerfile` is the image where `CMD` is service arguments with `-d MemDriver` as default value
+
+`docker-compose.yml` allows you to start the service by typing `docker-compose up`
+
+Enjoy !
