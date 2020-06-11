@@ -1,6 +1,14 @@
 # bubbles4py
 Simple dataviz server
 
+# installation
+
+Normally it is one command:
+
+```
+pip install -r requirements.txt
+```
+
 # Basic usage
 
 To run the simple server from command line :
@@ -25,7 +33,7 @@ Content-Length: 49
 {"result_id": "dzhbvyjitudwacbuowebgrahfixmtcvp"}
 ```
 
-The file ```result.json``` contains json data that mus conform to the 
+The file ```result.json``` contains json data that must conform to the 
 following :
 
 ```json
