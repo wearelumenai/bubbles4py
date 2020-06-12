@@ -76,7 +76,41 @@ class Fake_redis_driver:
     def get_community_detail(self):
         pass
 
+    def communities_to_graph(self, communities):
+        graph = {"nodes": [], "links": []}
+        for k in communities:
+            graph["nodes"].append({"id":k, "name":k})
+        for k1, v1 in communities.items():
+            for k2, v2 in communities.items():
+              graph['links'] = []
+        return graph
+
     def get_result(self, result_id):
+        """
+        Ignoring the result_id actually, just read what is in the redis database 
+        """
+        self.last_date = self.dates[self.time_idx]
+        """
+        print('time',self.time_idx)
+        if self.com_id == -1 or self.level == 1:
+            if self.level not in self.communities[self.last_date]:
+                if self.time_idx < len(self.dates) - 1:
+                    self.time_idx += 1
+                return {'centers': [], 'counts': [], 'columns': []}
+            communities = self.communities[self.last_date][self.level]
+
+        else:
+            communities = self.get_community_detail()
+        """
+        if self.time_idx < len(self.dates) - 1 and not self.time_traveller_mode:
+            self.time_idx += 1        
+        self.time_idx += 1
+        result = json.load(open('/home/paul/programmation/lumenai/bubbles4py/examples/data_network.json'))
+        print("returning", result)
+        return result #self.results[result_id]['result']
+
+
+    def get_result_centr(self, result_id):
         """
         Ignoring the result_id actually, just read what is in the redis database 
         """
@@ -88,6 +122,7 @@ class Fake_redis_driver:
                     self.time_idx += 1
                 return {'centers': [], 'counts': [], 'columns': []}
             communities = self.communities[self.last_date][self.level]
+
         else:
             communities = self.get_community_detail()
         if self.time_idx < len(self.dates) - 1 and not self.time_traveller_mode:
