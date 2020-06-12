@@ -26,8 +26,9 @@ class Server:
         self.app.route('/results', method='GET', callback=self.get_results)
         self.app.route('/numlevels', method='GET', callback=self.numlevels)
         self.app.route('/detail_community/<com_id>', method='GET', callback=self.detail_community)
-        self.app.route('/set_level/<level>', method='GET', callback=self.set_level)
         self.app.route('/last_date', method='GET', callback=self.last_date)
+        self.app.route('/set_level/<level>', method='GET', callback=self.set_level)
+        self.app.route('/set_date/<date>', method='GET', callback=self.set_date)
         self.app.route('/bubbles', method='GET', callback=Server.get_bubbles)
         self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
 
@@ -49,9 +50,15 @@ class Server:
             result = {"num_of_levels": num_of_levels}
         return result
 
+    def set_date(self, date):
+        if getattr(self.driver, "set_date", None):
+            return self.driver.set_date(date)
+        else:
+            return False
+
+
     def set_level(self, level):
         if getattr(self.driver, "set_level", None):
-            print("on set_level, server")
             num_of_levels, cur_level, num_of_com, com_id = self.driver.set_level(level)
             result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com, "com_id": com_id}
         else:
@@ -95,7 +102,7 @@ class Server:
         Serve the dataviz page
         :return: the html/javascript code of root/bubbles.html
         """
-        return static_file('bubbles.html', root=_root)
+        return static_file('graph.html', root=_root)
 
     @staticmethod
     def get_js(filename):

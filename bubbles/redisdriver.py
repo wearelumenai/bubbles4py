@@ -35,7 +35,6 @@ class GrphclusRedisDriver:
         """
         Create a new MemDriver instance
         """
-        
         self.port = redis_port
         self.level = 1
         data = load_data(json_file_containing_tweet)
