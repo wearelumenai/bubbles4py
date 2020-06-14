@@ -103,6 +103,7 @@ class Server:
         :return: the html/javascript code of root/bubbles.html
         """
         return static_file('graph.html', root=_root)
+        #return static_file('bubbles.html',  root=_root)
 
     @staticmethod
     def get_js(filename):
