@@ -36,7 +36,7 @@ class Fake_redis_driver:
         self.communities = data['communities']
         self.com_id = -1
 
-        self.time_idx = 1
+        self.time_idx = 0
         self.dates = sorted(self.communities.keys(), key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
         self.last_date = self.dates[self.time_idx]
         self.level = 1
@@ -54,6 +54,12 @@ class Fake_redis_driver:
         self.level = int(level)
         communities = self.communities[self.last_date][self.level]
         return len(self.communities[self.last_date]), self.level, len(communities), self.com_id
+  
+    def get_num_levels(self):
+        num_of_levels = len(self.communities[self.last_date])
+        num_of_com = len(self.communities[self.last_date][self.level]['communities'])
+        print("last date", self.last_date, 'index', self.time_idx, num_of_levels, self.level, num_of_com, self.com_id)
+        return num_of_levels, self.level, num_of_com, self.com_id
 
     def set_date(self, date):
         date = int(date)
@@ -99,16 +105,16 @@ class Fake_redis_driver:
             graph['links'].append({"id": '_'.join(sorted([str(k1),str(k2)])),  "source": k1, "target": k2})
         return graph
 
-    def get_result_bak(self, result_id):
+    def get_result(self, result_id):
         """
         Ignoring the result_id actually, just read what is in the redis database 
         """
         self.last_date = self.dates[self.time_idx]
         print('time',self.time_idx)
-        if self.com_id == -1 or self.level == 1:
+        if self.com_id == -1:# ok in this condition, it makes sense to get communities
             if self.level not in self.communities[self.last_date]:
-                if self.time_idx < len(self.dates) - 1:
-                    self.time_idx += 1
+                #if self.time_idx < len(self.dates) - 1:
+                #    self.time_idx += 1
                 return {'centers': [], 'counts': [], 'columns': []}
             communities = self.communities[self.last_date][self.level]['communities']
 
@@ -116,7 +122,6 @@ class Fake_redis_driver:
             communities = self.get_community_detail()
         if self.time_idx < len(self.dates) - 1 and not self.time_traveller_mode:
             self.time_idx += 1        
-        self.time_idx += 1
         #result = json.load(open('/home/paul/programmation/lumenai/bubbles4py/examples/data_network.json'))
         #result = json.load(open('/home/paul/programmation/lumenai/bubbles4py/twitter_graph.json'))
         result = self.communities_to_graph(communities)
@@ -124,6 +129,7 @@ class Fake_redis_driver:
         print(result)
         return result #self.results[result_id]['result']
 
+    """
     def get_result(self, result_id):
         self.time_idx += 1
         nnodes = self.time_idx % 10 + 1
@@ -132,12 +138,7 @@ class Fake_redis_driver:
         result = {"links":links, "nodes":nodes }
         print(result)
         return result
-
-    def get_num_levels(self):
-        num_of_levels = len(self.communities[self.last_date])
-        num_of_com = len(self.communities[self.last_date][self.level]['communities'])
-        print("last date", self.last_date, 'index', self.time_idx, num_of_levels, self.level, num_of_com, self.com_id)
-        return num_of_levels, self.level, num_of_com, self.com_id
+    """
 
     def detail_community(self, com_id):
         self.com_id = int(com_id)
