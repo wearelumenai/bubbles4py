@@ -124,6 +124,7 @@ var node = svg.selectAll("circle")
   .merge(node)
     .attr("r", function(d) { return d.value * 3 })
     .attr("fill", function(d) { return "#"+d.color}) //"#69b3a2")
+	.on('click',function(d){ sub_graph(d.id)})
 	.call(d3.drag()
 			.on("start", dragstarted)
 			.on("drag", dragged)
@@ -136,9 +137,9 @@ var node = svg.selectAll("circle")
       })
       .attr('x', 6)
       .attr('y', 3);
+
   node.append("title")
       .text(function(d) { return d.id; });
-
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
@@ -146,7 +147,6 @@ var simulation = d3.forceSimulation()
 		.force("x", d3.forceX())
 		.force("y", d3.forceY())
     .force("center", d3.forceCenter(width / 2, height / 2));
-
 
   simulation
       .nodes(graph.nodes)
@@ -168,13 +168,17 @@ var simulation = d3.forceSimulation()
         })
   }
 
-
 function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.3).restart();
   d.fx = d.x;
   d.fy = d.y;
 }
 
+function sub_graph(com_id){
+d3.json(`./sub_graph/${com_id}`, function(result){
+
+}
+}
 function dragged(d) {
   d.fx = d3.event.x;
   d.fy = d3.event.y;

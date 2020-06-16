@@ -31,6 +31,7 @@ class Server:
         self.app.route('/set_date/<date>', method='GET', callback=self.set_date)
         self.app.route('/bubbles', method='GET', callback=Server.get_bubbles)
         self.app.route('/graph', method='GET', callback=Server.get_graph)
+        self.app.route('/sub_graph<com_id>', method='GET', callback=Server.sub_graph)
         self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
 
         self.process = None
