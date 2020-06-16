@@ -1,364 +1,375 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-	  <title>The graph adventure!!</title>
-		<script src="https://d3js.org/d3.v4.js"></script>
-    <!-- <script src="https://d3js.org/d3-selection.v1.min.js"></script>
+  <meta charset="UTF-8">
+  <title>The graph adventure!!</title>
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <!-- <script src="https://d3js.org/d3-selection.v1.min.js"></script>
     <script src="https://d3js.org/d3-fetch.v1.min.js"></script> -->
     <script src="/tools/bubbles.js"></script>
     <script src="/tools/viz.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
     <link href="https://cdn.jsdelivr.net/npm/quasar@1.12.2/dist/quasar.min.css" rel="stylesheet" type="text/css">
-</head>
-<body>
-<div id="main">
-    <div id="board">
-        <div class="command" id="command"></div>
-        <button onclick="window.open('', '_self', ''); window.close();">Close</button>
-        <div id="detail"></div>
-    </div>
-    <!-- <div id="viz" style="width: 900px; height: 600px"></div> -->
-    <svg width="960" height="600"></svg>
-</div>
-
-</br>
-</br>
-<div id="q-app">
-  <div class="q-pa-md q-gutter-sm">
-    <levels
-      v-for="item in levelList"
-      v-bind:level="item"
-      v-bind:key="item.id"
-    ></levels>
-    </br>
-    {{ message }}
-    </br>
-  </div>
-<div class="q-pa-md">
-    <q-badge color="secondary">
-       current date: {{ dates[value] }} ( {{ dates[0] }} to {{ dates[dates.length - 1] }} )
-    </q-badge>
-    <q-slider
+  </head>
+  <body>
+    <div id="q-app" class="row justify-around">
+      <div class="col-auto">
+        <q-input
+        label="result id" v-model="resultId"
+        class="q-ma-md col-auto"
+        ></q-input>
+        <q-chip :label="message" color="primary"></q-chip>
+      </div>
+      <div id="main">
+        <div id="board">
+          <div class="command" id="command"></div>
+          <!--button onclick="window.open('', '_self', ''); window.close();">Close</button-->
+          <div id="detail"></div>
+        </div>
+        <!-- <div id="viz" style="width: 900px; height: 600px"></div> -->
+        <svg width="960" height="600"></svg>
+      </div>
+    <div class="q-pa-md col-12 justify-around">
+      <q-btn
+      v-for="({ id, text }) in levelList" :key="id"
+      color="blue"
+      text-color="black"
+      :label="text"
+      @click="select_level(id)"
+      />
+      <q-badge color="secondary">
+        current date: {{ formatDate(dates[value]) }} ( {{ formatDate(dates[0]) }} to {{ formatDate(dates[dates.length - 1]) }} )
+      </q-badge>
+      <q-btn
+        :label="playing ? 'stop' : 'play'"
+        @click="playStop">
+      </q-btn>
+      <q-input type="number" :min="500" v-model="speed" label="speed" ></q-input>
+      <q-slider
       v-model="value"
       :min="0"
       :max="dates.length - 1"
       :step="1"
-      :label-value="dates[value]"
+      markers
+      snap
+      :label-value="formatDate(dates[value])"
       label
       color="light-green"
-      @input="trigger"
-    />
+      >
+        <template #before>
+        </template>
+      </q-slider>
+    </div>
   </div>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/vue@^2.0.0/dist/vue.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/quasar@1.12.2/dist/quasar.umd.min.js"></script>
-<script>
-Vue.component('levels', {
-  props: ['level'],
-  template: '<q-btn color="blue" text-color="black" @click="select_level(level.id)" >{{ level.text }}</q-btn>'
-})
+  <script src="https://cdn.jsdelivr.net/npm/vue@^2.0.0/dist/vue.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quasar@1.12.2/dist/quasar.umd.min.js"></script>
+  <script>
 
-var q_app = new Vue({
-  el: '#q-app',
-  async mounted(){
-  /*let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
-  const detailsDisplay = DetailDisplay(d3.select("#detail"));
-  const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);*/
-    console.log('first creation')
-  },
-  data: {
-    value : 1,
-    levelList: [],
-    dates: [],
-    message : "",
-    time_traveller_mode : false,
-  },
-  methods: {
-    trigger(event){ // this function is called whenever the slider is touched
-       if(this.value == this.dates.length - 1 ){
-         this.time_traveller_mode = false
-         console.log("mode false")
-       }
-       else{
-         console.log("mode true")
-         this.time_traveller_mode = true
-       }
-       set_date()
-    }
-  }
-})
-    </script>
-
-<script>
-var svg = d3.select("svg"),
-    width = +svg.attr("width"),
-    height = +svg.attr("height");
-
-function update(force) {
-if(!q_app.time_traveller_mode || force){ 
-d3.json(`./result/${getResultId()}`, function(error, graph) {
- if (error) throw error;
-//graph = {'links': [{'id': '0_1', 'source': 0, 'target': 1, 'value': 10}], 'nodes': [{'id': 0, 'name': 0}, {'id': 1, 'name': 1}]}
-
- console.log("updating the graph")
- console.log(graph)
-  var link = svg.selectAll("line")
-    .data(graph.links, function (d) {return d.id})
-
-  link.exit().remove()
-
-  link= link.enter().append("line")
-      .merge(link)
-      .attr("stroke-width", function(d) { return Math.sqrt(d.value); })
-      .attr("stroke", "#999")
-      .attr("stroke_opacity", 1);
-
-var node = svg.selectAll("circle")
-  .data(graph.nodes, function (d) {return d.id})
-
-  node.exit().remove()
-
-  node = node.enter()
-  .append("circle")
-  .merge(node)
-    .attr("r",10)
-    .attr("fill", "#69b3a2")
-	.call(d3.drag()
-			.on("start", dragstarted)
-			.on("drag", dragged)
-			.on("end", dragended));
-
-
-  var labels = node.append("text")
-      .text(function(d) {
-        return d.id;
-      })
-      .attr('x', 6)
-      .attr('y', 3);
-
-  node.append("title")
-      .text(function(d) { return d.id; });
-
-
-var simulation = d3.forceSimulation()
-    .force("link", d3.forceLink().id(function(d) { return d.id; }))
-    .force("charge", d3.forceManyBody())
-    .force("center", d3.forceCenter(width / 2, height / 2));
-
-
-  simulation
-      .nodes(graph.nodes)
-      .on("tick", ticked);
-
-  simulation.force("link")
-      .links(graph.links);
-
- function ticked() {
-    link
-        .attr("x1", function(d) { return d.source.x; })
-        .attr("y1", function(d) { return d.source.y; })
-        .attr("x2", function(d) { return d.target.x; })
-        .attr("y2", function(d) { return d.target.y; });
-
-    node
-        .attr("transform", function(d) {
-          return "translate(" + d.x + "," + d.y + ")";
-        })
-  }
-});
-
-function dragstarted(d) {
-  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
-  d.fx = d.x;
-  d.fy = d.y;
-}
-
-function dragged(d) {
-  d.fx = d3.event.x;
-  d.fy = d3.event.y;
-}
-
-function dragended(d) {
-  if (!d3.event.active) simulation.alphaTarget(0);
-  d.fx = null;
-  d.fy = null;
-}
-}
-// now adding the new timestamp, if you are not in the past
-if(!q_app.time_traveller_mode){
-  d3.json(`./last_date`, function(jsondata){
-    q_app.dates.push(jsondata.last_date)
+    new Vue({
+      el: '#q-app',
+      async mounted(){
+        this.update()
+        /*
+        var bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
+        var detailsDisplay = DetailDisplay(d3.select("#detail"));
+        var dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);
+        */
+        console.log('first creation')
+      },
+      data: {
+        speed: 500,
+        value : 1,
+        levelList: [],
+        dates: [],
+        message : '',
+        time_traveller_mode : false,
+        resultId: getResultId(),
+        playing: false
+      },
+      watch: {
+        resultId () {
+          this.update()
+        },
+        level () {
+          this.update()
+        },
+        value () {
+          this.set_date()
+          this.update()
+        }
+      },
+      methods: {
+        play() {
+          if (this.playing) {
+            this.value++
+            setTimeout(this.play, this.speed)
+          }
+        },
+        playStop() {
+          this.playing = !this.playing
+          this.play()
+        },
+        set_date () {
+          var _this = this
+          console.log("setting date" + this.dates[this.value])
+          d3.json('./set_date/'+this.value, function(result) {
+            _this.numlevels()
+          })
+        },
+        select_level (level) {
+          var _this = this
+          d3.json('./set_level/'+level, function(num_levels) {
+            _this.update_numlevels(num_levels)
+          })
+        },
+        numlevels () {
+          var _this = this
+          d3.json('./numlevels', function(num_levels) {
+            _this.update_numlevels(num_levels)
+          })
+        },
+        update_date (result) {
+          this.dates.push(result.last_date)
+        },
+        update_numlevels (num_levels) {
+          new_button_list = []
+          for(var i = 1; i < num_levels.num_of_levels + 1; i++){
+            new_button_list.push({ id: i, text : 'level' + i })
+          }
+          this.levelList = new_button_list
+          this.message = 'Current level:' + num_levels.cur_level + ' with ' + num_levels.num_of_com + ' communities'
+        },
+        formatDate (date) {
+          return Quasar.date.formatDate(date, 'YYYY-MM-DD HH:mm')
+        },
+        update () {
+          var _this = this
+          d3.json('./last_date', function (jsondata) {
+            _this.dates.push(jsondata.last_date)
+          })
+          this.numlevels()
+          d3.json('./result/'+this.resultId, function (error, graph) {
+            if (error) throw error
+            
+            // graph = {'links': [{'id': '0_1', 'source': 0, 'target': 1, 'value': 10}], 'nodes': [{'id': 0, 'name': 0}, {'id': 1, 'name': 1}]}
+            
+            var svg = d3.select('svg')
+            
+            var width = svg.attr('width')
+            var height = svg.attr('height')
+            
+            console.log('updating the graph')
+            console.log(graph)
+            
+            var link = svg.selectAll('line').data(graph.links, function (d) { return d.id })
+            
+            link.exit()
+            .remove()
+            
+            lines = link.enter().append('line')
+            .merge(link)
+            .attr('stroke-width', function(d) {
+              return Math.sqrt(d.value) || 1
+            })
+            .attr('stroke', '#999')
+            .attr('stroke_opacity', 1)
+            
+            var node = svg.selectAll('circle')
+            .data(graph.nodes, function (d) { return d.id })
+            
+            node.exit()
+            .transition()
+            .duration(500)
+            .remove()
+            
+            function dragstarted(d) {
+              if (!d3.event.active) simulation.alphaTarget(0.3).restart()
+              d.fx = d.x
+              d.fy = d.y
+            }
+            
+            function dragged(d) {
+              d.fx = d3.event.x
+              d.fy = d3.event.y
+            }
+            
+            function dragended(d) {
+              if (!d3.event.active) simulation.alphaTarget(0)
+              d.fx = null
+              d.fy = null
+            }
+            
+            circles = node.enter()
+            .append('circle')
+            .merge(node)
+            .attr('r', 10)
+            .attr('fill', '#69b3a2')
+            .call(
+            d3.drag()
+            .on('start', dragstarted)
+            .on('drag', dragged)
+            .on('end', dragended)
+            )
+            
+            var labels = circles.append('text')
+            .text(function(d) {
+              return d.id
+            })
+            .attr('x', 6)
+            .attr('y', 3)
+            
+            /*shapes.append('title')
+            .text(function(d) { return d.id }) */
+            
+            var simulation = d3.forceSimulation()
+            .force('link', d3.forceLink().id(function(d) { return d.id }))
+            .force('charge', d3.forceManyBody())
+            .force('center', d3.forceCenter(width / 2, height / 2))
+            
+            function ticked() {
+              lines
+              .attr('x1', function(d) {
+                return d.source.x
+              })
+              .attr('y1', function(d) { return d.source.y })
+              .attr('x2', function(d) { return d.target.x })
+              .attr('y2', function(d) { return d.target.y })
+              
+              circles
+              .attr('transform', function(d) {
+                return 'translate(' + d.x + ',' + d.y + ')'
+              })
+            }
+            
+            simulation
+            .nodes(graph.nodes)
+            .on('tick', ticked)
+            
+            simulation
+            .force('link')
+            .links(graph.links)
+            
+          })
+        }
+      }
     })
-}
-// and update the available level to match with the current timestamp
-  d3.json(`./numlevels`, function(num_levels){
-    update_numlevels(num_levels)
-  })
-} // endif end function update
-</script>
-
+    
+  </script>
+  
+  <script>
+    /*
+    // now adding the new timestamp, if you are not in the past
+    if(!this.time_traveller_mode) {
+      d3.json(`./last_date`, function(jsondata){
+        this.dates.push(jsondata.last_date)
+      })
+    }
+    // and update the available level to match with the current timestamp
+    d3.json(`./numlevels`, function(num_levels) {
+      update_numlevels(num_levels)
+    })
+    // endif end function update
+    */
+  </script>
+  
 </body>
 
-<script>
-
-  function set_date(){
-    console.log("setting date" + q_app.dates[q_app.value])
-    d3.json(`./set_date/${q_app.value}`, function(result){
-    update(true)
-		numlevels()
-  });
-  }
-
-  function onDimensionChanged(data, dimensions) {
-      bubbleChart = bub.bubbles.update(bubbleChart, bub.XYChart, {data, dimensions});
-  }
-
-  function go() {
-      d3.json(`./result/${getResultId()}`, function(result){
-          result => startViz(result, dimensionPicker, detailsDisplay)
-      });
-  }
-
-function select_level(level){
-  d3.json(`./set_level/${level}`, function(num_levels){
-    update_numlevels(num_levels)
-    update(true)
-  });
-}
-
-function numlevels(){
-	d3.json(`./numlevels`, function(num_levels){
-    update_numlevels(num_levels)
-	})
-}
-
-function update_date(result){
-  q_app.dates.push(result.last_date)
-}
-
-function update_numlevels(num_levels){
-  new_button_list = []
-  var i
-  for(i=1; i<num_levels.num_of_levels+1; i++){
-    new_button_list.push({id: i, text : 'level' + i })
-  }
-  q_app.levelList= new_button_list
-  q_app.message = "Current level:" + num_levels.cur_level + " with " + num_levels.num_of_com + "communuties"
-}
-
-/*
-function last_date(){
-if(!q_app.time_traveller_mode){
-  d3.json(`./last_date`, function(jsondata){
-	  q_app.dates.push(jsondata.last_date)
-		})
-}
-}*/
-
-//go()
-//setInterval(go, 2000)
-setInterval(function() { update(false); }, 2000)
-//setInterval(numlevels, 2000)
-//setInterval(last_date, 2000)
-</script>
-
 <style>
-
-.btn {
-  border: none;
-  color: white;
-  padding: 5px 5px;
-  font-size: 32px;
-  cursor: pointer;
-}
-
-
-    #main {
-        display: flex;
-        padding: 20px;
-    }
-
-    #board {
-        position: relative;
-    }
-
-    .command {
-        display: table;
-    }
-
-    .command div {
-        display: table-row;
-    }
-
-    .command div * {
-        display: table-cell;
-        padding-bottom: .5em;
-        padding-right: .5em;
-    }
-
-    button {
-        color: white;
-        background: #4C8FFB;
-        border: 1px #3079ED solid;
-        box-shadow: inset 0 1px 0 #80B0FB;
-        padding: 5px 10px;
-        border-radius: 2px;
-        font-weight: bold;
-        font-size: 9pt;
-        outline: none;
-        margin-top: 5px;
-    }
-
-    #command {
-        margin-bottom: 1em;
-    }
-
-    #command div select {
-        width: 15em;
-    }
-
-    #detail {
-        padding: .8em .4em 0 .8em;
-        position: absolute;
-        bottom: 3em;
-        width: 100%;
-    }
-
-    #detail.active {
-        background: lightgrey;
-    }
-
-    #detail .caption {
-        text-align: left;
-        text-decoration: underline;
-        font-weight: 700;
-        padding-bottom: 5px;
-    }
-
-    #detail .values {
-        max-height: 21em;
-        overflow-y: scroll;
-    }
-
-    .cluster {
-        pointer-events: visible !important;
-        cursor: pointer;
-    }
-.links line {
-  stroke: #999;
-  stroke-opacity: 0.6;
-}
-
-.nodes circle {
-  stroke: #fff;
-  stroke-width: 1.5px;
-}
-
-text {
-  font-family: sans-serif;
-  font-size: 10px;
-}
-
+  
+  .btn {
+    border: none;
+    color: white;
+    padding: 5px 5px;
+    font-size: 32px;
+    cursor: pointer;
+  }
+  
+  
+  #main {
+    display: flex;
+    padding: 20px;
+  }
+  
+  #board {
+    position: relative;
+  }
+  
+  .command {
+    display: table;
+  }
+  
+  .command div {
+    display: table-row;
+  }
+  
+  .command div * {
+    display: table-cell;
+    padding-bottom: .5em;
+    padding-right: .5em;
+  }
+  
+  button {
+    color: white;
+    background: #4C8FFB;
+    border: 1px #3079ED solid;
+    box-shadow: inset 0 1px 0 #80B0FB;
+    padding: 5px 10px;
+    border-radius: 2px;
+    font-weight: bold;
+    font-size: 9pt;
+    outline: none;
+    margin-top: 5px;
+  }
+  
+  #command {
+    margin-bottom: 1em;
+  }
+  
+  #command div select {
+    width: 15em;
+  }
+  
+  #detail {
+    padding: .8em .4em 0 .8em;
+    position: absolute;
+    bottom: 3em;
+    width: 100%;
+  }
+  
+  #detail.active {
+    background: lightgrey;
+  }
+  
+  #detail .caption {
+    text-align: left;
+    text-decoration: underline;
+    font-weight: 700;
+    padding-bottom: 5px;
+  }
+  
+  #detail .values {
+    max-height: 21em;
+    overflow-y: scroll;
+  }
+  
+  .cluster {
+    pointer-events: visible !important;
+    cursor: pointer;
+  }
+  .links line {
+    stroke: #999;
+    stroke-opacity: 0.6;
+  }
+  
+  .nodes circle {
+    stroke: #fff;
+    stroke-width: 1.5px;
+  }
+  
+  text {
+    font-family: sans-serif;
+    font-size: 10px;
+  }
+  
 </style>
 </html>
