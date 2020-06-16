@@ -37,7 +37,8 @@
   </div>
 <div class="q-pa-md">
     <q-badge color="secondary">
-       current date: {{ dates[value] }} ( {{ dates[0] }} to {{ dates[dates.length - 1] }} )
+		<div v-if="value">current time: {{ dates[dates.length - 1] }} ( {{ dates[0] }} to {{ dates[dates.length - 1] }} ) </div>
+		<div v-else> current time: {{ dates[value] }} ( {{ dates[0] }} to {{ dates[dates.length - 1] }} )</div>
     </q-badge>
     <q-slider
       v-model="value"
@@ -99,7 +100,6 @@ function update(force) {
 if(!q_app.time_traveller_mode || force){ 
 d3.json(`./result/${getResultId()}`, function(error, graph) {
  if (error) throw error;
-//graph = {'links': [{'id': '0_1', 'source': 0, 'target': 1, 'value': 10}], 'nodes': [{'id': 0, 'name': 0}, {'id': 1, 'name': 1}]}
 
  console.log("updating the graph")
  console.log(graph)
@@ -122,13 +122,12 @@ var node = svg.selectAll("circle")
   node = node.enter()
   .append("circle")
   .merge(node)
-    .attr("r",10)
+    .attr("r", function(d) { return d.value * 3 })
     .attr("fill", "#69b3a2")
 	.call(d3.drag()
 			.on("start", dragstarted)
 			.on("drag", dragged)
 			.on("end", dragended));
-
 
   var labels = node.append("text")
       .text(function(d) {
@@ -143,7 +142,9 @@ var node = svg.selectAll("circle")
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
-    .force("charge", d3.forceManyBody())
+    .force("charge", d3.forceManyBody().strength(-400))
+		.force("x", d3.forceX())
+		.force("y", d3.forceY())
     .force("center", d3.forceCenter(width / 2, height / 2));
 
 
@@ -166,7 +167,7 @@ var simulation = d3.forceSimulation()
           return "translate(" + d.x + "," + d.y + ")";
         })
   }
-});
+
 
 function dragstarted(d) {
   if (!d3.event.active) simulation.alphaTarget(0.3).restart();
@@ -184,6 +185,10 @@ function dragended(d) {
   d.fx = null;
   d.fy = null;
 }
+
+});
+
+
 }
 // now adding the new timestamp, if you are not in the past
 if(!q_app.time_traveller_mode){
@@ -247,20 +252,8 @@ function update_numlevels(num_levels){
   q_app.message = "Current level:" + num_levels.cur_level + " with " + num_levels.num_of_com + "communuties"
 }
 
-/*
-function last_date(){
-if(!q_app.time_traveller_mode){
-  d3.json(`./last_date`, function(jsondata){
-	  q_app.dates.push(jsondata.last_date)
-		})
-}
-}*/
-
 //go()
-//setInterval(go, 2000)
 setInterval(function() { update(false); }, 2000)
-//setInterval(numlevels, 2000)
-//setInterval(last_date, 2000)
 </script>
 
 <style>
