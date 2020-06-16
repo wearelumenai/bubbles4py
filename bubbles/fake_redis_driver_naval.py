@@ -11,17 +11,7 @@ from scipy.spatial import distance
 from munkres import Munkres
 from scipy import stats as s
 import pickle
-
-party_to_cat = {'em': 0,
- 'indetermined': 1,
- 'ps': 2,
- 'lr': 3,
- 'fn': 4,
- 'fi': 5,
- 'multi_affiliations': 6}
-
-topics = { 'colere': ['menace', 'attentat', 'mauvais','imposture', 'erreur','assez','guerre' 'violence', 'attaquer', 'attentat', 'police', 'escroquerie', 'manifestation', 'mensonge', 'mentir', 'systeme'], 'société': [ 'Retraités', 'islamistes', 'riches', 'supporter', 'exprimer', 'islamiste', 'europe', 'système'], 'economy': ['finance','économie', 'crise', 'entreprises', 'entreprise', 'bulle', 'libéral', 'classes', 'agriculture', 'chômeur', 'travail', 'euro', 'argent', 'milliard', 'dette'], 'macron': ['marche','emmanuel', 'macron', 'manuel'], 'ps': ['hollande', 'gauche', 'valls', 'benoît', 'socialiste'], 'republicains': ['fillon', 'sarkozy', 'juppé', 'penelope', 'droite', 'nicolas',  'pénélope', 'alain', 'françois'], 'insoumis': ['mélenchon', 'insoumis', 'luc', 'jean' ], 'rassembl.': ['marine', 'france'], 'positif' : ['soutien', 'gagn', 'avenir', 'soutenir', 'premier', 'bravo', 'allez', 'enfin', 'chance', 'rall', 'solution', 'mobilisation',  'confiance'] }
-key_topics = list(topics.keys())
+import math
 
 class Fake_redis_driver_naval:
     """get some data, push then sequentially to grphclus, and read the result in the redis database which the grphclus storage"""
@@ -36,7 +26,7 @@ class Fake_redis_driver_naval:
         self.communities = data['communities']
         self.com_id = -1
 
-        self.time_idx = 0
+        self.time_idx = 300
         self.dates = sorted(self.communities.keys()) #, key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
         self.last_date = self.dates[self.time_idx]
         self.level = 1
@@ -52,14 +42,16 @@ class Fake_redis_driver_naval:
     def set_level(self, level):
         self.com_id = -1
         self.level = int(level)
-        num_of_communities = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ])
+        community_tree = self.communities[self.last_date]['community_tree']
+        num_of_communities = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ])
         levels = set([community_tree.nodes[n]['level'] for n in community_tree.nodes ])
-        return len(levels) self.level, num_of_communities, self.com_id
+        return len(levels), self.level, num_of_communities, self.com_id
   
     def get_num_levels(self):
+        community_tree = self.communities[self.last_date]['community_tree']
         levels = set([community_tree.nodes[n]['level'] for n in community_tree.nodes ])
-        num_of_levels = len(levels)
-        num_of_com = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ]) 
+        num_of_levels = len(levels) - 1
+        num_of_com = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]) 
         print("last date", self.last_date, 'index', self.time_idx, num_of_levels, self.level, num_of_com, self.com_id)
         return num_of_levels, self.level, num_of_com, self.com_id
 
@@ -70,8 +62,8 @@ class Fake_redis_driver_naval:
             self.time_traveller_mode = True
         print('traveled to', self.dates[date])
         self.time_idx = date
-        if self.time_idx == self.present:
-            print('back to present')
+        if self.time_idx >= self.present:
+            print('back to present or even the future')
             self.time_traveller_mode = False # back to normal life
         return self.get_result(0)
 
@@ -84,29 +76,6 @@ class Fake_redis_driver_naval:
     def get_community_detail(self):
         pass
 
-    def communities_to_graph(self, communities):
-        graph = {"nodes": [], "links": []}
-
-        outgoing = dict([(k,set()) for k in communities])
-        import random
-        graph_size = random.randint(5,15)
-        biggest_com = sorted([ (len(v),k) for (k,v) in communities.items() ])[-graph_size:] # sorted()[-50:]
-        biggest_com = [k for (l,k) in biggest_com]
-        for k in biggest_com: #communities.items():
-            ns = communities[k]
-            graph["nodes"].append({"id":k, "name":k})
-            for n in ns:
-                outgoing[k].update(set(self.graph.neighbors(n)))
-        links = []
-        for k1 in biggest_com: #communities.items():
-            v1 = communities[k1]
-            for k2, v2 in outgoing.items():
-                if k1 != k2 and len(v1.intersection(v2)) > 0: 
-                    links.append((len(v1.intersection(v2)), k1, k2))
-        links = sorted(links)[-10:]
-        for w, k1, k2 in links:
-            graph['links'].append({"id": '_'.join(sorted([str(k1),str(k2)])),  "source": k1, "target": k2})
-        return graph
 
     def get_result(self, result_id):
         """
@@ -114,28 +83,34 @@ class Fake_redis_driver_naval:
         """
         self.last_date = self.dates[self.time_idx]
         community_tree = self.communities[self.last_date]['community_tree']
-        communities = aggregate_childrens(community_tree, 2)
+        communities = aggregate_childrens(community_tree, self.level)
         graph = {"nodes": [], "links": []}
-        nodes = [ {'id':n, 'value':len(communities[n])} for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ]
-        links = [ for n in nodes for ne in neigbors ]
-        print('time',self.time_idx)
-        if self.com_id == -1:# ok in this condition, it makes sense to get communities
-            if self.level not in self.communities[self.last_date]:
-                #if self.time_idx < len(self.dates) - 1:
-                #    self.time_idx += 1
-                return {'centers': [], 'counts': [], 'columns': []}
-            communities = self.communities[self.last_date][self.level]['communities']
+        nodes = [ {'id':n, 'value':int(1+math.log(len(communities[n])))} for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]
+        links = []
+        for i, n in enumerate(nodes):
+            n1 = n['id']
+            for j in range(i+1,len(nodes)):
+                n2 = nodes[j]['id']
+                if (n1, n2) in community_tree.edges:
+                    if 'weight' not in community_tree.edges[(n1,n2)]:
+                        print(n1,n2)
+                        continue
+                    weight = community_tree.edges[(n1,n2)]['weight']
+                    weight = min(100, math.log(weight))
+                    if weight == 0:
+                        continue
+                    links.append({'id':'_'.join(sorted([str(n1),str(n2)])),  "source": n1, "target": n2, "value": weight} )
 
-        else:
-            communities = self.get_community_detail()
         if self.time_idx < len(self.dates) - 1 and not self.time_traveller_mode:
             self.time_idx += 1        
-        #result = json.load(open('/home/paul/programmation/lumenai/bubbles4py/examples/data_network.json'))
-        #result = json.load(open('/home/paul/programmation/lumenai/bubbles4py/twitter_graph.json'))
-        result = self.communities_to_graph(communities)
-        #print("returning", result)
-        print(result)
-        return result #self.results[result_id]['result']
+        for n in nodes:
+          n['id'] = str(n['id'])
+        graph['nodes'] = nodes
+        graph['links'] = links
+        print(graph)
+        print([e['value'] for e in links])
+        return graph 
+
 
     """
     def get_result(self, result_id):
@@ -203,6 +178,28 @@ def remap_centroids(centroids, last_centroids):
         ks_rearranged[i] = ks[to_add.pop()]
     return ks_rearranged
 
+
+
+def aggregate_childrens(community_tree, level): 
+    communities = {} 
+    if level == 0: 
+        return {} 
+    com_id_this_level = [ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ] 
+    for n in com_id_this_level: 
+        communities[n] = get_all_leaves(community_tree, n) 
+    return communities  
+ 
+def get_childrens(G, node_id): 
+    return [ n for n in G.neighbors(node_id) if G.nodes[n]['level'] < G.nodes[node_id]['level'] ] 
+ 
+def get_all_leaves(community_tree, n): 
+    leaves = [] 
+    childrens = get_childrens(community_tree, n) 
+    if len(childrens) == 0: 
+        leaves.append(n) 
+    for child in get_childrens(community_tree, n): 
+        leaves += get_all_leaves(community_tree, child) 
+    return leaves
 
 def hashy(node):
     int(node)

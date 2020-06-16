@@ -50,13 +50,6 @@ class Server:
             result = {"num_of_levels": num_of_levels}
         return result
 
-    def set_date(self, date):
-        if getattr(self.driver, "set_date", None):
-            return self.driver.set_date(date)
-        else:
-            return False
-
-
     def set_level(self, level):
         if getattr(self.driver, "set_level", None):
             num_of_levels, cur_level, num_of_com, com_id = self.driver.set_level(level)
@@ -65,6 +58,12 @@ class Server:
             num_of_levels = 0
             result = {"num_of_levels": num_of_levels}
         return result
+
+    def set_date(self, date):
+        if getattr(self.driver, "set_date", None):
+            return self.driver.set_date(date)
+        else:
+            return False
 
  
     def post_result(self):
