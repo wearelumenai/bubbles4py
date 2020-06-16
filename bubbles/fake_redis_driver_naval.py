@@ -20,7 +20,7 @@ class Fake_redis_driver_naval:
         """
         Create a new MemDriver instance
         """
-        
+
         data = pickle.load(open(pickle_containing_graph_and_coms, 'rb')) 
         self.graph = data['graph']
         self.communities = data['communities']
@@ -46,7 +46,7 @@ class Fake_redis_driver_naval:
         num_of_communities = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ])
         levels = set([community_tree.nodes[n]['level'] for n in community_tree.nodes ])
         return len(levels), self.level, num_of_communities, self.com_id
-  
+
     def get_num_levels(self):
         community_tree = self.communities[self.last_date]['community_tree']
         levels = set([community_tree.nodes[n]['level'] for n in community_tree.nodes ])
@@ -110,7 +110,6 @@ class Fake_redis_driver_naval:
         print(graph)
         print([e['value'] for e in links])
         return graph 
-
 
     """
     def get_result(self, result_id):
