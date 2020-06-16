@@ -30,7 +30,7 @@ class Fake_redis_driver_naval:
         """
         Create a new MemDriver instance
         """
-        
+
         data = pickle.load(open(pickle_containing_graph_and_coms, 'rb')) 
         self.graph = data['graph']
         self.communities = data['communities']
@@ -54,8 +54,8 @@ class Fake_redis_driver_naval:
         self.level = int(level)
         num_of_communities = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ])
         levels = set([community_tree.nodes[n]['level'] for n in community_tree.nodes ])
-        return len(levels) self.level, num_of_communities, self.com_id
-  
+        return len(levels), self.level, num_of_communities, self.com_id
+
     def get_num_levels(self):
         levels = set([community_tree.nodes[n]['level'] for n in community_tree.nodes ])
         num_of_levels = len(levels)
@@ -117,7 +117,7 @@ class Fake_redis_driver_naval:
         communities = aggregate_childrens(community_tree, 2)
         graph = {"nodes": [], "links": []}
         nodes = [ {'id':n, 'value':len(communities[n])} for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ]
-        links = [ for n in nodes for ne in neigbors ]
+        # links = [ for n in nodes for ne in neigbors ]
         print('time',self.time_idx)
         if self.com_id == -1:# ok in this condition, it makes sense to get communities
             if self.level not in self.communities[self.last_date]:
@@ -129,7 +129,7 @@ class Fake_redis_driver_naval:
         else:
             communities = self.get_community_detail()
         if self.time_idx < len(self.dates) - 1 and not self.time_traveller_mode:
-            self.time_idx += 1        
+            self.time_idx += 1
         #result = json.load(open('/home/paul/programmation/lumenai/bubbles4py/examples/data_network.json'))
         #result = json.load(open('/home/paul/programmation/lumenai/bubbles4py/twitter_graph.json'))
         result = self.communities_to_graph(communities)
