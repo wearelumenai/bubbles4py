@@ -1,4 +1,4 @@
-import copy
+import random
 import string, time
 import numpy as np
 import json
@@ -7,9 +7,6 @@ from secrets import choice
 from threading import Lock
 import threading
 import networkx as nx
-from scipy.spatial import distance
-from munkres import Munkres
-from scipy import stats as s
 import pickle
 import math
 
@@ -25,8 +22,9 @@ class Fake_redis_driver_naval:
         self.graph = data['graph']
         self.communities = data['communities']
         self.com_id = -1
+        self.colors = {}
 
-        self.time_idx = 300
+        self.time_idx = 1200
         self.dates = sorted(self.communities.keys()) #, key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
         self.last_date = self.dates[self.time_idx]
         self.level = 1
@@ -86,6 +84,10 @@ class Fake_redis_driver_naval:
         communities = aggregate_childrens(community_tree, self.level)
         graph = {"nodes": [], "links": []}
         nodes = [ {'id':n, 'value':int(1+math.log(len(communities[n])))} for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]
+        for n in nodes:
+            if n['id'] not in self.colors:
+                self.colors[n['id']] = '%06x' % random.randrange(16**6)
+            n['color'] = self.colors[n['id']]
         links = []
         for i, n in enumerate(nodes):
             n1 = n['id']
@@ -107,8 +109,6 @@ class Fake_redis_driver_naval:
           n['id'] = str(n['id'])
         graph['nodes'] = nodes
         graph['links'] = links
-        print(graph)
-        print([e['value'] for e in links])
         return graph 
 
     """
@@ -140,43 +140,6 @@ class Fake_redis_driver_naval:
     def how_is_the_graph(self):
         print('number of nodes', len(self.graph.nodes))
         print('number of edges', len(self.graph.edges))
-
-def remap_centroids(centroids, last_centroids):
-    """
-    remap which hungarian method
-    """
-    m = np.zeros((len(centroids),len(last_centroids)))
-    ks = list(centroids.keys())
-    for i, k in enumerate(ks):
-      for j in range(len(last_centroids)): #enumerate(last_ks):
-        c1 = centroids[k]
-        c2 = last_centroids[j]
-        m[i,j] = distance.euclidean(np.array(c1), np.array(c2))
-    mu = Munkres()
-    if m.shape[0] > m.shape[1]:
-      indices = mu.compute(copy.copy(m.transpose()))
-      indices = dict([(j,i) for (i,j) in indices])
-    else:
-      indices = dict(mu.compute(copy.copy(m)))
-    ks_rearranged = [[]]*len(centroids)
-    to_add = set(range(len(ks))) # all of them should arrive in ks_rearranged
-    # add the ones which has been mapped by the hungarian algorithm
-    for i in range(len(centroids)):
-      if i in indices and indices[i]<len(centroids):
-        ks_rearranged[indices[i]] = ks[i]
-        to_add.remove(i)
-    """
-    print(centroids)
-    print('last',last_centroids)
-    print(ks_rearranged)
-    print('indices', indices)
-    """
-    # add the remaining ones
-    for i in range(len(centroids)):
-      if not ks_rearranged[i]: # if this one is empty #len(ks_rearranged[i]) == 0:
-        ks_rearranged[i] = ks[to_add.pop()]
-    return ks_rearranged
-
 
 
 def aggregate_childrens(community_tree, level): 

@@ -123,19 +123,19 @@ var node = svg.selectAll("circle")
   .append("circle")
   .merge(node)
     .attr("r", function(d) { return d.value * 3 })
-    .attr("fill", "#69b3a2")
+    .attr("fill", function(d) { return "#"+d.color}) //"#69b3a2")
 	.call(d3.drag()
 			.on("start", dragstarted)
 			.on("drag", dragged)
 			.on("end", dragended));
 
-  var labels = node.append("text")
+
+  node.append("text")
       .text(function(d) {
         return d.id;
       })
       .attr('x', 6)
       .attr('y', 3);
-
   node.append("title")
       .text(function(d) { return d.id; });
 
