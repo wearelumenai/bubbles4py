@@ -30,6 +30,7 @@ class Server:
         self.app.route('/set_level/<level>', method='GET', callback=self.set_level)
         self.app.route('/set_date/<date>', method='GET', callback=self.set_date)
         self.app.route('/bubbles', method='GET', callback=Server.get_bubbles)
+        self.app.route('/graph', method='GET', callback=Server.get_graph)
         self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
 
         self.process = None
@@ -102,8 +103,15 @@ class Server:
         Serve the dataviz page
         :return: the html/javascript code of root/bubbles.html
         """
+        return static_file('bubbles.html', root=_root)
+
+    @staticmethod
+    def get_graph():
+        """
+        Serve the dataviz page
+        :return: the html/javascript code of root/graph.html
+        """
         return static_file('graph.html', root=_root)
-        #return static_file('bubbles.html',  root=_root)
 
     @staticmethod
     def get_js(filename):
