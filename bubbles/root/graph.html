@@ -12,14 +12,57 @@
     <link href="https://cdn.jsdelivr.net/npm/quasar@1.12.2/dist/quasar.min.css" rel="stylesheet" type="text/css">
 </head>
 <body>
-<div id="main">
+
+<div id="q-app">
+
+  <q-layout view="hHh LpR fff">
+    <q-header>
+      <q-toolbar>
+        <!--q-btn flat @click="showLeftMenu = !showLeftMenu" round dense icon="menu"></q-btn-->
+
+        <q-toolbar-title>
+          Grphclus
+        </q-toolbar-title>
+        <q-input label="graph id" v-model="resultId" class="q-mx-md"></q-input>
+        <q-btn @click="$q.fullscreen.toggle()" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" class="q-mx-md"></q-btn>
+      </q-toolbar>
+    </q-header>
+    <!--q-drawer v-model="showLeftMenu" bordered>
+      <q-slider vertical v-model="level" :min="0" :max="levelList.length - 1" snap label inverted :label-value="level.text" label-always></q-slider>
+    </q-drawer-->
+    <q-page-container>
+      <q-page padding>
+        <div class="row">
+          <q-slider vertical v-model="level" :min="1" :max="levelList.length" snap label reverses :label-value="message" label-always class="col-2"></q-slider>
+          <svg width="960" height="600" id="graph"></svg>
+        </div>
+      </q-page>
+    </q-page-container>
+    <!--q-drawer v-model="showRightMenu" bordered side="right">
+      <q-slider vertical v-model="level" :min="0" :max="levelList.length - 1" snap label inverted></q-slider>
+    </q-drawer-->
+    <q-footer>
+      <q-toolbar>
+        <q-toolbar-title style="width: 150px">
+          Timeline
+        </q-toolbar-title>
+        <q-btn :label="playing ? 'stop' : 'play'" @click="playing = !playing" class="q-mx-md"></q-btn>
+        <q-input type="number" :min="1" suffix="s" v-model="speed" class="q-mx-md"></q-input>
+        <div style="width: 1200px"><q-slider :label="timeMessage" v-model="time" markers :min="0" :max="dates.length - 1" :label-value="formatDate(dates[level])" label-always></q-slider></div>
+      </q-toolbar>
+    </q-footer>
+  </q-layout>
+
+</div>
+
+<!--div id="main">
     <div id="board">
         <div class="command" id="command"></div>
         <button onclick="window.open('', '_self', ''); window.close();">Close</button>
         <div id="detail"></div>
-    </div>
+    </div-->
     <!-- <div id="viz" style="width: 900px; height: 600px"></div> -->
-    <svg width="960" height="600"></svg>
+    <!--svg width="960" height="600"></svg>
 </div>
 
 </br>
@@ -51,14 +94,14 @@
       @input="trigger"
     />
   </div>
-</div>
+</div-->
 <script src="https://cdn.jsdelivr.net/npm/vue@^2.0.0/dist/vue.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/quasar@1.12.2/dist/quasar.umd.min.js"></script>
 <script>
-Vue.component('levels', {
+/*Vue.component('levels', {
   props: ['level'],
   template: '<q-btn color="blue" text-color="black" @click="select_level(level.id)" >{{ level.text }}</q-btn>'
-})
+})*/
 
 var q_app = new Vue({
   el: '#q-app',
@@ -67,34 +110,205 @@ var q_app = new Vue({
   const detailsDisplay = DetailDisplay(d3.select("#detail"));
   const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);*/
     console.log('first creation')
+    this.init()
+    this.update()
   },
   data: {
-    value : 1,
+    level : 1,
     levelList: [],
     dates: [],
     message : "",
     time_traveller_mode : false,
+    showLeftMenu: true,
+    showRightMenu: true,
+    resultId: getResultId(),
+    speed: 2,
+    time: new Date().getTime(),
+    playing: false,
+    simulation: null,
+    node: null,
+    link: null
+  },
+  computed: {
+    timeMessage () {
+      var currentTime = this.formatDate(this.dates[this.time || this.dates.length - 1])
+      return 'current time: '+currentTime+' ( '+this.formatDate(this.dates[0])+ ' to '+this.formatDate(this.dates[this.dates.length - 1])+' )'
+    }
+  },
+  watch: {
+    level (level) {
+      this.set_level()
+    },
+    time () {
+      this.set_date()
+    },
+    playing (playing) {
+      if (playing) {
+        this.update_date()
+        this.play()
+      }
+    }
   },
   methods: {
-    trigger(event){ // this function is called whenever the slider is touched
-       if(this.value == this.dates.length - 1 ){
-         this.time_traveller_mode = false
-         console.log("mode false")
-       }
-       else{
-         console.log("mode true")
-         this.time_traveller_mode = true
-       }
-       set_date()
+    update_numlevels(num_levels){
+      new_button_list = []
+      for(var i=1; i<num_levels.num_of_levels+1; i++){
+        new_button_list.push({id: i, text : 'level' + i })
+      }
+      this.levelList = new_button_list
+      this.message = "Level: " + num_levels.cur_level + " (" + num_levels.num_of_com + " communities)"
+    },
+    update_date (result) {
+      var _this = this
+      d3.json(`./last_date`, function(jsondata){
+        _this.dates.push(jsondata.last_date)
+      })
+    },
+    set_level () {
+      var _this = this
+      d3.json('./set_level/'+this.level, function(num_levels) {
+        _this.update_numlevels(num_levels)
+        _this.update()
+      })
+    },
+    set_date () {
+      var _this = this
+      console.log("setting date" + this.dates[this.time])
+      d3.json('./set_date/'+this.time, function(result){
+        d3.json('./numlevels', function(num_levels){
+          _this.update_numlevels(num_levels)
+          _this.update()
+        })
+      });
+    },
+    play () {
+      if (this.playing) {
+        this.time = Math.min(this.dates.length - 1, this.time + 1)
+        setTimeout(this.play, this.speed * 1000)
+      }
+    },
+    formatDate (date) {
+      return Quasar.date.formatDate(new Date(date), 'YYYY-MM-DD HH:mm');
+    },
+    init () {
+      var svg = d3.select("#graph"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");
+
+
+      this.link = svg.append("g")
+          .attr("stroke", "#000")
+          .attr("stroke-width", 1.5)
+        .selectAll("line");
+
+      this.node = svg.append("g")
+          .attr("stroke", "#fff")
+          .attr("stroke-width", 1.5)
+        .selectAll("circle");
+
+      function ticked() {
+        this.node.attr("cx", d => d.x)
+            .attr("cy", d => d.y)
+
+        this.link.attr("x1", d => d.source.x)
+            .attr("y1", d => d.source.y)
+            .attr("x2", d => d.target.x)
+            .attr("y2", d => d.target.y);
+      }
+
+      this.simulation = d3.forceSimulation()
+        .force("link", d3.forceLink().id(function(d) { return d.id; }))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("x", d3.forceX())
+        .force("y", d3.forceY())
+        .force("center", d3.forceCenter(width / 2, height / 2))
+        .on("tick", ticked.bind(this));
+    },
+    updateLevels () {
+      var _this = this
+      d3.json(`./numlevels`, function(num_levels){
+        _this.update_numlevels(num_levels)
+      })
+    },
+    update () {
+      var _this = this
+      d3.json('/result/'+this.resultId, function(error, graph) {
+
+        _this.update_date()
+        _this.updateLevels()
+
+      // Make a shallow copy to protect against mutation, while
+            // recycling old nodes to preserve position and velocity.
+            const old = new Map(_this.node.data().map(d => [d.id, d]));
+            var nodes = graph.nodes.map(d => Object.assign(old.get(d.id) || {}, d));
+            var links = graph.links.map(d => Object.assign({}, d));
+
+            _this.node = _this.node
+              .data(nodes, function (d) {return d.id})
+
+            _this.node.exit().remove()
+
+            _this.node = _this.node.enter().append("circle")
+                .merge(_this.node)
+                  .attr("r", function(d) { return d.value * 3 })
+                  .attr("fill", function(d) { return "#"+d.color})
+                  .call(
+                    d3.drag()
+                      .on('start', dragstarted)
+                      .on('drag', dragged)
+                      .on('end', dragended)
+                  )
+                //.attr("r", 8)
+                //.attr("fill", "#69b3a2");
+
+          _this.link = _this.link
+            .data(links, function (d) {return d.id})
+
+          _this.link.exit().remove()
+
+          _this.link = _this.link.enter().append("line")
+            .merge(_this.link)
+            .attr("stroke-width", function(d) { return Math.sqrt(d.value); })
+            .attr("stroke", "#999")
+            .attr("stroke_opacity", 1);
+
+            _this.simulation.nodes(nodes);
+
+            _this.simulation.force("link").links(links);
+            _this.simulation.alpha(1).restart();
+
+        function dragstarted(d) {
+          if (!d3.event.active) _this.simulation.alphaTarget(0.3).restart();
+          d.fx = d.x;
+          d.fy = d.y;
+        }
+
+        /*function sub_graph(com_id){
+        d3.json(`./sub_graph/${com_id}`, function(result){
+        }
+        }*/
+
+
+        function dragged(d) {
+          d.fx = d3.event.x;
+          d.fy = d3.event.y;
+        }
+
+        function dragended(d) {
+          if (!d3.event.active) _this.simulation.alphaTarget(0);
+          d.fx = null;
+          d.fy = null;
+        }
+
+      });
     }
   }
 })
     </script>
 
-<script>
+<!--script>
 
-
-var svg = d3.select("svg"),
+var svg = d3.select("#graph"),
     width = +svg.attr("width"),
     height = +svg.attr("height");
 
@@ -129,7 +343,7 @@ var svg = d3.select("svg"),
 
 
 function update(force) {
-if(!q_app.time_traveller_mode || force){ 
+if(!q_app.time_traveller_mode || force){
 d3.json(`./result/${getResultId()}`, function(error, graph) {
 
 // Make a shallow copy to protect against mutation, while
@@ -205,11 +419,11 @@ if(!q_app.time_traveller_mode){
     update_numlevels(num_levels)
   })
 } // endif end function update
-</script>
+</script-->
 
 </body>
 
-<script>
+<!--script>
 
   function set_date(){
     console.log("setting date" + q_app.dates[q_app.value])
@@ -253,12 +467,12 @@ function update_numlevels(num_levels){
     new_button_list.push({id: i, text : 'level' + i })
   }
   q_app.levelList= new_button_list
-  q_app.message = "Current level:" + num_levels.cur_level + " with " + num_levels.num_of_com + "communuties"
+  q_app.message = "Current level:" + num_levels.cur_level + " with " + num_levels.num_of_com + " communities"
 }
 
 //go()
 setInterval(function() { update(false); }, 2000)
-</script>
+</script-->
 
 <style>
 
