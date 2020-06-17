@@ -36,6 +36,9 @@ class Server:
 
         self.process = None
 
+    def sub_graph(self, com_id):
+        pass
+
     def last_date(self):
         return {'last_date': self.driver.get_last_date()}
 

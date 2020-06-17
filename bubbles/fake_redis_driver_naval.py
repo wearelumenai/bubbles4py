@@ -24,7 +24,7 @@ class Fake_redis_driver_naval:
         self.com_id = -1
         self.colors = {}
 
-        self.time_idx = 1200
+        self.time_idx = 480 
         self.dates = sorted(self.communities.keys()) #, key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
         self.last_date = self.dates[self.time_idx]
         self.level = 1
@@ -54,7 +54,7 @@ class Fake_redis_driver_naval:
         return num_of_levels, self.level, num_of_com, self.com_id
 
     def set_date(self, date):
-        date = int(date)
+        date = int(date) + 480 
         if not self.time_traveller_mode:
             self.present = self.time_idx # recall when is the present to go back
             self.time_traveller_mode = True
@@ -109,6 +109,7 @@ class Fake_redis_driver_naval:
           n['id'] = str(n['id'])
         graph['nodes'] = nodes
         graph['links'] = links
+        print(graph)
         return graph 
 
     """
