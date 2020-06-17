@@ -42,13 +42,16 @@
       <q-slider vertical v-model="level" :min="0" :max="levelList.length - 1" snap label inverted></q-slider>
     </q-drawer-->
     <q-footer>
-      <q-toolbar>
+      <q-toolbar class="bg-neutral">
         <q-toolbar-title style="width: 150px">
           Timeline
         </q-toolbar-title>
         <q-btn :label="playing ? 'stop' : 'play'" @click="playing = !playing" class="q-mx-md"></q-btn>
-        <q-input type="number" :min="1" suffix="s" v-model="speed" class="q-mx-md"></q-input>
-        <div style="width: 1200px"><q-slider :label="timeMessage" v-model="time" markers :min="0" :max="dates.length - 1" :label-value="formatDate(dates[level])" label-always></q-slider></div>
+        <q-input type="number" :min="1" suffix="s" v-model="speed" class="q-mx-md" label="speed" style="width: 50px"></q-input>
+        <q-badge>
+          {{ timeMessage }}
+        </q-badge>
+        <div style="width: 800px"><q-slider color="accent" v-model="time" markers :min="0" :max="dates.length - 1" :label-value="formatDate(dates[level])" label-always></q-slider></div>
       </q-toolbar>
     </q-footer>
   </q-layout>
@@ -131,7 +134,7 @@ var q_app = new Vue({
   },
   computed: {
     timeMessage () {
-      var currentTime = this.formatDate(this.dates[this.time || this.dates.length - 1])
+      var currentTime = this.formatDate(this.dates[this.time || this.dates.length - 1] || new Date())
       return 'current time: '+currentTime+' ( '+this.formatDate(this.dates[0])+ ' to '+this.formatDate(this.dates[this.dates.length - 1])+' )'
     }
   },
