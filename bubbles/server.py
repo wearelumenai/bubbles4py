@@ -33,8 +33,15 @@ class Server:
         self.app.route('/graph', method='GET', callback=Server.get_graph)
         self.app.route('/sub_graph<com_id>', method='GET', callback=Server.sub_graph)
         self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
-
+        self.app.route('/switch_com_nodeid', method='GET', callback=self.switch_com_nodeid)
+        self.app.route('/stop_time', method='GET', callback=self.switch_stop_time)
         self.process = None
+
+    def switch_stop_time(self):
+        return self.driver.switch_stop_time()
+
+    def switch_com_nodeid(self):
+        return self.driver.switch_com_nodeid_func()
 
     def sub_graph(self, com_id):
         pass

@@ -23,13 +23,16 @@ class Fake_redis_driver_naval:
         self.communities = data['communities']
         self.com_id = -1
         self.colors = {}
+        self.last_level = -1
 
         self.time_idx = 480 
         self.dates = sorted(self.communities.keys()) #, key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
-        self.last_date = self.dates[self.time_idx]
         self.level = 1
-        self.time_traveller_mode = False
-        self.present = 0
+        self.stop_time= False
+        self.switch_com_nodeid = True
+
+    def switch_stop_time(self):
+        self.stop_time = False if self.stop_time else True
 
     def put_result(self, result):
         """
@@ -39,30 +42,32 @@ class Fake_redis_driver_naval:
 
     def set_level(self, level):
         self.com_id = -1
+        self.last_level = self.level
         self.level = int(level)
-        community_tree = self.communities[self.last_date]['community_tree']
+        community_tree = self.communities[self.dates[self.time_idx]]['community_tree']
         num_of_communities = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ])
-        levels = set([community_tree.nodes[n]['level'] for n in community_tree.nodes ])
+        levels = list(set([community_tree.nodes[n]['level'] for n in community_tree.nodes ]))
+        if len(levels) > 1:
+            levels.pop()
         return len(levels), self.level, num_of_communities, self.com_id
 
+    def switch_com_nodeid_func(self):
+        self.switch_com_nodeid = False if self.switch_com_nodeid else True
+
     def get_num_levels(self):
-        community_tree = self.communities[self.last_date]['community_tree']
-        levels = set([community_tree.nodes[n]['level'] for n in community_tree.nodes ])
+        community_tree = self.communities[self.dates[self.time_idx]]['community_tree']
+        levels = list(set([community_tree.nodes[n]['level'] for n in community_tree.nodes ]))
+        if len(levels) > 1: # assuming the last one is useless because it does not have edges
+            levels.pop()
         num_of_levels = len(levels) - 1
         num_of_com = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]) 
-        print("last date", self.last_date, 'index', self.time_idx, num_of_levels, self.level, num_of_com, self.com_id)
+        print("last date", self.dates[self.time_idx], 'index', self.time_idx, num_of_levels, self.level, num_of_com, self.com_id)
         return num_of_levels, self.level, num_of_com, self.com_id
 
     def set_date(self, date):
         date = int(date) + 480 
-        if not self.time_traveller_mode:
-            self.present = self.time_idx # recall when is the present to go back
-            self.time_traveller_mode = True
         print('traveled to', self.dates[date])
         self.time_idx = date
-        if self.time_idx >= self.present:
-            print('back to present or even the future')
-            self.time_traveller_mode = False # back to normal life
         return self.get_result(0)
 
     def put_result_id(self, result, result_id):
@@ -74,20 +79,45 @@ class Fake_redis_driver_naval:
     def get_community_detail(self):
         pass
 
+    def get_node_color(self, nodeid):
+        if nodeid not in self.colors:
+            self.colors[nodeid] = '%06x' % random.randrange(16**6)
+        return self.colors[nodeid]
+
+    def get_curve(time_idx, level=None):
+        time_idx = min(time_idx, len(self.dates))
+        values = []
+        if level is None:
+            level = self.level
+        for i in range(time_idx):
+            community_tree = self.communities[self.dates[self.time_idx]]['community_tree']
+            com_id_this_level = [ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ]
+            values.append({'date': self.dates[i], 'value': len(com_id_this_level)})
+    return values
 
     def get_result(self, result_id):
         """
         Ignoring the result_id actually, just read what is in the redis database 
         """
-        self.last_date = self.dates[self.time_idx]
-        community_tree = self.communities[self.last_date]['community_tree']
+        last_date = self.dates[self.time_idx]
+        community_tree = self.communities[last_date]['community_tree']
         communities = aggregate_childrens(community_tree, self.level)
         graph = {"nodes": [], "links": []}
         nodes = [ {'id':n, 'value':int(1+math.log(len(communities[n])))} for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]
+        print('level', self.level, 'last level', self.last_level, 'time traveller', self.stop_time)
         for n in nodes:
-            if n['id'] not in self.colors:
-                self.colors[n['id']] = '%06x' % random.randrange(16**6)
-            n['color'] = self.colors[n['id']]
+            if self.switch_com_nodeid or (not self.switch_com_nodeid and self.last_level == self.level -1): # each node get it's own color (special case if you were in community view mode and jump to the higher level, in order to preserve color consistency between two subsequent levels
+                n['color'] = self.get_node_color(n['id'])
+            else: # each node will have the color of its parent
+                child_level = community_tree.nodes[n['id']]['level']
+                color = None
+                for potential_parent in community_tree.neighbors(n['id']): 
+                    if community_tree.nodes[potential_parent]['level'] == child_level + 1:
+                        color = self.get_node_color(potential_parent)
+                        break
+                if color is None: # this node did not have any parent, (maybe it was at the community top level of the hierarchy)
+                    color = self.get_node_color(n['id'])
+                n['color'] = color
         links = []
         for i, n in enumerate(nodes):
             n1 = n['id']
@@ -103,13 +133,12 @@ class Fake_redis_driver_naval:
                         continue
                     links.append({'id':'_'.join(sorted([str(n1),str(n2)])),  "source": n1, "target": n2, "value": weight} )
 
-        if self.time_idx < len(self.dates) - 1 and not self.time_traveller_mode:
+        if self.time_idx < len(self.dates) - 1 and not self.stop_time:
             self.time_idx += 1        
         for n in nodes:
           n['id'] = str(n['id'])
         graph['nodes'] = nodes
         graph['links'] = links
-        print(graph)
         return graph 
 
     """
@@ -136,7 +165,7 @@ class Fake_redis_driver_naval:
         }
         
     def get_last_date(self):
-        return self.last_date
+        return self.dates[self.time_idx] 
 
     def how_is_the_graph(self):
         print('number of nodes', len(self.graph.nodes))
