@@ -35,7 +35,11 @@ class Server:
         self.app.route('/tools/<filename>', method='GET', callback=Server.get_js)
         self.app.route('/switch_com_nodeid', method='GET', callback=self.switch_com_nodeid)
         self.app.route('/stop_time', method='GET', callback=self.switch_stop_time)
+        self.app.route('/get_curve', method='GET', callback=self.get_curve)
         self.process = None
+
+    def get_curve(self):
+        return self.driver.get_curve()
 
     def switch_stop_time(self):
         return self.driver.switch_stop_time()

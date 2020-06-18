@@ -47,6 +47,7 @@
         <q-toolbar-title style="width: 150px">
           Timeline
         </q-toolbar-title>
+          <svg width="300" height="100" id="curve"></svg>
         <q-btn :label="playing ? 'stop' : 'play'" :icon="playing ? 'stop' : 'play_arrow'" @click="playing = !playing" class="q-mx-md"></q-btn>
         <q-input color="white" type="number" :min="1" suffix="s" v-model="speed" class="q-ma-md" label="speed" style="width: 50px"></q-input>
         <div style="width: 800px">
@@ -225,6 +226,7 @@ var q_app = new Vue({
         width = +svg.attr("width"),
         height = +svg.attr("height");
 
+      this.svg_curve = d3.select("#curve")
 
       this.link = svg.append("g")
           .attr("stroke", "#000")
@@ -331,6 +333,53 @@ var q_app = new Vue({
         }
 
       });
+
+d3.json('/get_curve', function(error, data) {
+
+ data = [{'date':1, 'value':1}, {'date':2, 'value':4}, {'date':3, 'value':3}]
+
+widt = _this.svg_curve.attr("width"),
+heigh = _this.svg_curve.attr("height");
+
+line = d3.line()
+    .defined(d => !isNaN(d.value))
+    .x(d => x(d.date))
+    .y(d => y(d.value))
+
+var margin = {top: 10, right: 30, bottom: 30, left: 40},
+
+y = d3.scaleLinear()
+    .domain([0, d3.max(data, d => d.value)]).nice()
+    .range([heigh - margin.bottom, margin.top])
+
+x = d3.scaleUtc()
+    .domain(d3.extent(data, d => d.date))
+    .range([margin.left, widt - margin.right])
+
+xAxis = g => g
+    .attr("transform", `translate(0,${heigh - margin.bottom})`)
+    .call(d3.axisBottom(x).ticks(widt / 80).tickSizeOuter(0))
+
+yAxis = g => g
+    .attr("transform", `translate(${margin.left},0)`)
+    .call(d3.axisLeft(y).ticks(0))
+
+  _this.svg_curve.append("g")
+      .call(xAxis);
+
+  _this.svg_curve.append("g")
+      .call(yAxis);
+
+
+  _this.svg_curve.append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "steelblue")
+      .attr("stroke-width", 1.5)
+      .attr("stroke-linejoin", "round")
+      .attr("stroke-linecap", "round")
+      .attr("d", line);
+      })
     }
   }
 })

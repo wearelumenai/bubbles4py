@@ -84,7 +84,9 @@ class Fake_redis_driver_naval:
             self.colors[nodeid] = '%06x' % random.randrange(16**6)
         return self.colors[nodeid]
 
-    def get_curve(time_idx, level=None):
+    def get_curve(self, time_idx=1000, level=None):
+        if time_idx is None:
+            time_idx = self.time_idx
         time_idx = min(time_idx, len(self.dates))
         values = []
         if level is None:
@@ -93,7 +95,7 @@ class Fake_redis_driver_naval:
             community_tree = self.communities[self.dates[self.time_idx]]['community_tree']
             com_id_this_level = [ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ]
             values.append({'date': self.dates[i], 'value': len(com_id_this_level)})
-    return values
+        return values
 
     def get_result(self, result_id):
         """
