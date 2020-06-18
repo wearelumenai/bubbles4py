@@ -47,7 +47,7 @@
         <q-toolbar-title style="width: 150px">
           Timeline
         </q-toolbar-title>
-          <svg width="300" height="100" id="curve"></svg>
+          <svg width="600" height="100" id="curve"></svg>
         <q-btn :label="playing ? 'stop' : 'play'" :icon="playing ? 'stop' : 'play_arrow'" @click="playing = !playing" class="q-mx-md"></q-btn>
         <q-input color="white" type="number" :min="1" suffix="s" v-model="speed" class="q-ma-md" label="speed" style="width: 50px"></q-input>
         <div style="width: 800px">
@@ -334,10 +334,12 @@ var q_app = new Vue({
 
       });
 
-d3.json('/get_curve', function(error, data) {
-
- data = [{'date':1, 'value':1}, {'date':2, 'value':4}, {'date':3, 'value':3}]
-
+d3.json(`/get_curve`, function(error, json) {
+console.log(json)
+console.log("here")
+ //data = [{'date':1, 'value':1}, {'date':2, 'value':4}, {'date':3, 'value':3}]
+// data = [{'date': 1550220892.0, 'value': 6}, {'date': 1550220900.0, 'value': 6}, {'date': 1550220908.0, 'value': 6}, {'date': 1550220916.0, 'value': 6}, {'date': 1550220923.0, 'value': 6}, {'date': 1550220931.0, 'value': 6}, {'date': 1550220940.0, 'value': 6}]
+data = json.curve
 widt = _this.svg_curve.attr("width"),
 heigh = _this.svg_curve.attr("height");
 

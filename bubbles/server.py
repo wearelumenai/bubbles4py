@@ -39,7 +39,8 @@ class Server:
         self.process = None
 
     def get_curve(self):
-        return self.driver.get_curve()
+        curve = self.driver.get_curve()
+        return {'curve' : curve }
 
     def switch_stop_time(self):
         return self.driver.switch_stop_time()
