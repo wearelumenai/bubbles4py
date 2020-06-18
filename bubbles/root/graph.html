@@ -18,13 +18,13 @@
   <q-layout view="hHh LpR fff">
     <q-header>
       <q-toolbar>
-        <!--q-btn flat @click="showLeftMenu = !showLeftMenu" round dense icon="menu"></q-btn-->
-
         <q-toolbar-title>
-          Grphclus
+          <q-img src="/tools/Logo-LL-horizontal.png" width="30%"></q-img>
         </q-toolbar-title>
-        <q-input label="graph id" v-model="resultId" class="q-mx-md"></q-input>
-        <q-btn @click="$q.fullscreen.toggle()" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" class="q-mx-md"></q-btn>
+        <q-input label="graph id" v-model="resultId" class="q-ma-md"></q-input>
+        <q-btn @click="$q.fullscreen.toggle()" label="fullscreen" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" class="q-mx-md"></q-btn>
+        <q-btn label="dark" icon="settings_brightness" @click="$q.dark.toggle()" class="q-mx-md"></q-btn>
+        <q-btn label="export data" icon="cloud_download" class="q-mx-md" @click="$q.notify({color:'info', message:'data exporting is coming soon',progess:true,icon:'info'})"></q-btn>
       </q-toolbar>
     </q-header>
     <!--q-drawer v-model="showLeftMenu" bordered>
@@ -33,7 +33,7 @@
     <q-page-container>
       <q-page padding>
         <div class="row">
-          <q-slider vertical v-model="level" :min="1" :max="levelList.length" snap label reverses :label-value="message" label-always class="col-2"></q-slider>
+          <q-slider reverse vertical v-model="level" :min="1" :max="levelList.length" snap label reverses :label-value="message" label-always class="col-2"></q-slider>
           <svg width="960" height="600" id="graph"></svg>
         </div>
       </q-page>
@@ -46,12 +46,24 @@
         <q-toolbar-title style="width: 150px">
           Timeline
         </q-toolbar-title>
-        <q-btn :label="playing ? 'stop' : 'play'" @click="playing = !playing" class="q-mx-md"></q-btn>
-        <q-input type="number" :min="1" suffix="s" v-model="speed" class="q-mx-md" label="speed" style="width: 50px"></q-input>
-        <q-badge>
-          {{ timeMessage }}
-        </q-badge>
-        <div style="width: 800px"><q-slider color="accent" v-model="time" markers :min="0" :max="dates.length - 1" :label-value="formatDate(dates[level])" label-always></q-slider></div>
+        <q-btn :label="playing ? 'stop' : 'play'" :icon="playing ? 'stop' : 'play_arrow'" @click="playing = !playing" class="q-mx-md"></q-btn>
+        <q-input color="white" type="number" :min="1" suffix="s" v-model="speed" class="q-ma-md" label="speed" style="width: 50px"></q-input>
+        <div style="width: 800px">
+          <q-field>
+            <template #before>
+              <q-badge>
+                {{ fromTime }}
+              </q-badge>
+          </template>
+            <q-slider color="accent" v-model="time" markers :min="0" :max="dates.length - 1" :label-value="currentTime" label-always>
+            </q-slider>
+            <template #after>
+              <q-badge>
+                {{ toTime }}
+              </q-badge>
+          </template>
+          </q-field>
+        </div>
       </q-toolbar>
     </q-footer>
   </q-layout>
@@ -117,7 +129,7 @@ var q_app = new Vue({
     this.update()
   },
   data: {
-    level : 1,
+    level : 0,
     levelList: [],
     dates: [],
     message : "",
@@ -133,9 +145,14 @@ var q_app = new Vue({
     link: null
   },
   computed: {
-    timeMessage () {
-      var currentTime = this.formatDate(this.dates[this.time || this.dates.length - 1] || new Date())
-      return 'current time: '+currentTime+' ( '+this.formatDate(this.dates[0])+ ' to '+this.formatDate(this.dates[this.dates.length - 1])+' )'
+    currentTime () {
+      return this.formatDate(this.dates[this.time] || new Date().getTime()/1000)
+    },
+    fromTime() {
+      return this.formatDate(this.dates[0])
+    },
+    toTime () {
+      return this.formatDate(this.dates[this.dates.length - 1])
     }
   },
   watch: {
@@ -159,6 +176,9 @@ var q_app = new Vue({
         new_button_list.push({id: i, text : 'level' + i })
       }
       this.levelList = new_button_list
+      if (this.level === 0) {
+        this.level = this.levelList.length
+      }
       this.message = "Level: " + num_levels.cur_level + " (" + num_levels.num_of_com + " communities)"
     },
     update_date (result) {
@@ -191,7 +211,7 @@ var q_app = new Vue({
       }
     },
     formatDate (date) {
-      return Quasar.date.formatDate(new Date(date), 'YYYY-MM-DD HH:mm');
+      return Quasar.date.formatDate(new Date(date * 1000), 'YYYY-MM-DD HH:mm');
     },
     init () {
       var svg = d3.select("#graph"),
