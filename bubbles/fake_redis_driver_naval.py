@@ -25,8 +25,8 @@ class Fake_redis_driver_naval:
         self.com_id = -1
         self.colors = {}
         self.last_level = -1
-
-        self.time_idx = 480 
+        self.offset = 1000 
+        self.time_idx = self.offset
         self.dates = sorted(self.communities.keys()) #, key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
         self.level = 1
         self.stop_time= False
@@ -66,7 +66,7 @@ class Fake_redis_driver_naval:
         return num_of_levels, self.level, num_of_com, self.com_id
 
     def set_date(self, date):
-        date = int(date) + 480 
+        date = int(date) +  self.offset 
         print('traveled to', self.dates[date])
         self.time_idx = date
         return self.get_result(0)
@@ -85,17 +85,20 @@ class Fake_redis_driver_naval:
             self.colors[nodeid] = '%06x' % random.randrange(16**6)
         return self.colors[nodeid]
 
-    def get_curve(self, time_idx=1000, level=None):
+    def get_curve(self, time_idx=None, level=None):
         if time_idx is None:
             time_idx = self.time_idx
         time_idx = min(time_idx, len(self.dates))
         values = []
         if level is None:
             level = self.level
-        for i in range(time_idx):
-            community_tree = self.communities[self.dates[self.time_idx]]['community_tree']
+        #level = 3
+        for i in range(len(self.dates)): #time_idx)
+            community_tree = self.communities[self.dates[i]]['community_tree']
             com_id_this_level = [ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ]
             values.append({'date': self.dates[i], 'value': len(com_id_this_level)})
+        #for i in range(len(values)):
+        #    values[i] = sum(values[i-2:i+2])
         return values
 
     def get_community_activities(self, communities):
