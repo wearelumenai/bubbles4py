@@ -103,7 +103,7 @@ class Fake_redis_driver_naval:
         for (com_id, nodes) in communities.items():
             activities_this_com = []
             for n in nodes:
-                activities_this_node = [ self.graph.edges[e]['created_at'] for e in self.graph.edges(int(n)) ]
+                activities_this_node = [ self.graph.edges[e]['created_at'] for e in self.graph.edges(int(float(n))) ]
                 if len(activities_this_node) == 0:
                     print('no activity for node', n,com_id,self.level)
                     last_activity_this_node = 0
