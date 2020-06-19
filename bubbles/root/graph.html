@@ -278,6 +278,7 @@
         var _this = this
         d3.json(`./last_date`, function(jsondata){
           _this.dates.push(jsondata.last_date)
+          _this.dates.sort()
         })
       },
       set_level () {
