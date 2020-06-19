@@ -53,7 +53,7 @@ class Fake_redis_driver_naval:
         return len(levels), self.level, num_of_communities, self.com_id
 
     def switch_com_nodeid_func(self):
-        self.switch_com_nodeid = False if self.switch_com_nodeid else True
+        self.switch_com_nodeid = not self.switch_com_nodeid
 
     def get_num_levels(self):
         community_tree = self.communities[self.dates[self.time_idx]]['community_tree']
