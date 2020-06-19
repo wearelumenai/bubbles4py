@@ -25,7 +25,7 @@ class Fake_redis_driver_naval:
         self.com_id = -1
         self.colors = {}
         self.last_level = -1
-        self.offset = 1000 
+        self.offset = 0 
         self.time_idx = self.offset
         self.dates = sorted(self.communities.keys()) #, key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
         self.level = 1
