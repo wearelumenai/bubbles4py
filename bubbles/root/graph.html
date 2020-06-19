@@ -377,6 +377,7 @@
           // .transition()
           .attr("r", function(d) { return d.value * 3 })
           .attr("fill", function(d) { return "#"+d.color})
+					.attr('fill-opacity', function(d) {return d.opacity })
           .call(
           d3.drag()
           .on('start', dragstarted)

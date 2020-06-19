@@ -1,3 +1,4 @@
+from scipy.optimize import curve_fit
 import random
 import string, time
 import numpy as np
@@ -101,12 +102,37 @@ class Fake_redis_driver_naval:
         community_activities = {}
         for (com_id, nodes) in communities.items():
             activities_this_com = []
-            for n in nodes
-                last_activity_this_node = max([ self.graph.edges[e]['created_at'] for e in self.graph.edges(nodes) ])
+            for n in nodes:
+                activities_this_node = [ self.graph.edges[e]['created_at'] for e in self.graph.edges(int(n)) ]
+                if len(activities_this_node) == 0:
+                    print('no activity for node', n,com_id,self.level)
+                    last_activity_this_node = 0
+                else:
+                    last_activity_this_node = max(activities_this_node)
                 activities_this_com.append(last_activity_this_node)
             activity_this_com = np.quantile(activities_this_com, 0.8)
             community_activities[com_id] = activity_this_com
+        community_activities = self.squash_with_sigmoid(community_activities)
         return community_activities
+
+
+    def squash_with_sigmoid(self, community_activities):
+        values = list(community_activities.values())
+        min_x, max_x, middle_x = np.min(values), np.max(values), np.median(values)
+        """
+        values = [ max(0.2, (v - min_x) / (max_x - min_x)) for v in values]
+        ydata = np.array([0.2, 0.5, 1])
+        xdata = np.array([min_x, middle_x, max_x])
+        popt, pcov = curve_fit(self.sigmoid, xdata, ydata)
+        """
+        for (com_id, activity) in community_activities.items():
+            community_activities[com_id] = max(0.2, (activity - min_x) / (max_x - min_x))  #self.sigmoid(activity, *popt)
+        return community_activities
+
+    def sigmoid(self, x, x0, k):
+        y = 1 / (1+ np.exp(-k*(x-x0)))
+        return y
+
 
     def get_result(self, result_id):
         """
@@ -115,8 +141,9 @@ class Fake_redis_driver_naval:
         last_date = self.dates[self.time_idx]
         community_tree = self.communities[last_date]['community_tree']
         communities = aggregate_childrens(community_tree, self.level)
+        community_activities = self.get_community_activities(communities)
         graph = {"nodes": [], "links": []}
-        nodes = [ {'id':n, 'value':int(1+math.log(len(communities[n])))} for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]
+        nodes = [ {'id':n, 'value':int(1+math.log(len(communities[n]))), 'opacity': community_activities[n] } for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]
         print('level', self.level, 'last level', self.last_level, 'time traveller', self.stop_time)
         for n in nodes:
             if (not self.switch_com_nodeid) or self.last_level == self.level -1: # each node get it's own color (special case if you were in community view mode and jump to the higher level, in order to preserve color consistency between two subsequent levels
