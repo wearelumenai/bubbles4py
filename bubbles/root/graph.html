@@ -24,7 +24,7 @@
             <!--q-input label="graph id" v-model="resultId" class="q-ma-md"></q-input-->
             <!--q-btn @click="$q.fullscreen.toggle()" label="fullscreen" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" class="q-mx-md"></q-btn-->
             <!--q-btn label="dark" icon="settings_brightness" @click="$q.dark.toggle()" class="q-mx-md"></q-btn-->
-            <q-btn :label="showCommunities ? 'hide communities' : 'show communities'" @click="switch_communities_nodeid()" class="q-mx-md"></q-btn>
+            <q-toggle color="accent" label="show communities" :value="showCommunities" class="q-mx-md" @input="switch_communities_nodeid"></q-toggle>
             <!--q-btn label="export data" icon="cloud_download" class="q-mx-md" @click="$q.notify({color:'info', message:'data exporting is coming soon',progess:true,icon:'info'})"></q-btn-->
           </q-toolbar>
         </q-header>
@@ -147,7 +147,6 @@
       const detailsDisplay = DetailDisplay(d3.select("#detail"));
       const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);*/
       this.init()
-      this.switch_communities_nodeid()
       this.update()
     },
     data: {
@@ -192,9 +191,6 @@
           this.update_date()
           this.play()
         }
-      },
-      showCommunities () {
-        this.update()
       }
     },
     methods: {
@@ -264,7 +260,7 @@
       switch_communities_nodeid(){
         var _this = this
         d3.json(`./switch_com_nodeid`, function (jsondata){
-          _this.showCommunities = !_this.showCommunities
+          _this.update()
         })
       },
       update_numlevels(num_levels){
@@ -352,6 +348,8 @@
         var _this = this
         d3.json('/result/'+this.resultId, function(error, graph) {
           
+          _this.showCommunities = graph.com_nodeid
+
           _this.update_date()
           _this.updateLevels()
           _this.draw_curve()
