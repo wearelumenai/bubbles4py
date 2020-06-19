@@ -6,7 +6,7 @@
 		<script src="https://d3js.org/d3.v4.js"></script>
     <!-- <script src="https://d3js.org/d3-selection.v1.min.js"></script>
     <script src="https://d3js.org/d3-fetch.v1.min.js"></script> -->
-    <script src="/tools/bubbles.js"></script>
+    <!--script src="/tools/bubbles.js"></script-->
     <script src="/tools/viz.js"></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css">
     <link href="https://cdn.jsdelivr.net/npm/quasar@1.12.2/dist/quasar.min.css" rel="stylesheet" type="text/css">
@@ -19,13 +19,13 @@
     <q-header>
       <q-toolbar>
         <q-toolbar-title>
-          <q-img src="/tools/Logo-LL-horizontal.png" width="30%"></q-img>
+          <q-img src="/tools/Logo-LL-horizontal.png" width="315px"></q-img>
         </q-toolbar-title>
-        <q-input label="graph id" v-model="resultId" class="q-ma-md"></q-input>
-        <q-btn @click="$q.fullscreen.toggle()" label="fullscreen" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" class="q-mx-md"></q-btn>
-        <q-btn label="dark" icon="settings_brightness" @click="$q.dark.toggle()" class="q-mx-md"></q-btn>
-				<q-btn label="communities" @click="switch_communities_nodeid()" class="q-mx-md"></q-btn>
-        <q-btn label="export data" icon="cloud_download" class="q-mx-md" @click="$q.notify({color:'info', message:'data exporting is coming soon',progess:true,icon:'info'})"></q-btn>
+        <!--q-input label="graph id" v-model="resultId" class="q-ma-md"></q-input-->
+        <!--q-btn @click="$q.fullscreen.toggle()" label="fullscreen" :icon="$q.fullscreen.isActive ? 'fullscreen_exit' : 'fullscreen'" class="q-mx-md"></q-btn-->
+        <!--q-btn label="dark" icon="settings_brightness" @click="$q.dark.toggle()" class="q-mx-md"></q-btn-->
+				<q-btn :label="showCommunities ? 'hide communities' : 'show communities'" @click="switch_communities_nodeid()" class="q-mx-md"></q-btn>
+        <!--q-btn label="export data" icon="cloud_download" class="q-mx-md" @click="$q.notify({color:'info', message:'data exporting is coming soon',progess:true,icon:'info'})"></q-btn-->
       </q-toolbar>
     </q-header>
     <!--q-drawer v-model="showLeftMenu" bordered>
@@ -34,7 +34,7 @@
     <q-page-container>
       <q-page padding>
         <div class="row">
-          <q-slider reverse vertical v-model="level" :min="1" :max="levelList.length" snap label reverses :label-value="message" label-always class="col-2"></q-slider>
+          <q-slider reverse vertical v-model="level" :min="1" :max="levelList.length" snap label reverses :label-value="message" label-always class="col-2" color="secondary"></q-slider>
           <svg width="960" height="600" id="graph"></svg>
         </div>
       </q-page>
@@ -112,6 +112,26 @@
     />
   </div>
 </div-->
+<script>
+
+window.quasarConfig = {
+  brand: {
+    primary: '#3C4F9C',
+    secondary: '#88C49F',
+    accent: '#E0709E',
+
+    neutral: '#FFFFFF',
+    dark: '#1d1d1d',
+
+    positive: '#0DBD8C',
+    negative: '#BD0038',
+    info: '#4C90E6',
+    warning: '#E3773D'
+  },
+  dark: true
+}
+
+</script>
 <script src="https://cdn.jsdelivr.net/npm/vue@^2.0.0/dist/vue.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/quasar@1.12.2/dist/quasar.umd.min.js"></script>
 <script>
@@ -127,6 +147,7 @@ var q_app = new Vue({
   const detailsDisplay = DetailDisplay(d3.select("#detail"));
   const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);*/
     this.init()
+    this.switch_communities_nodeid()
     this.update()
   },
   data: {
@@ -143,7 +164,8 @@ var q_app = new Vue({
     playing: false,
     simulation: null,
     node: null,
-    link: null
+    link: null,
+    showCommunities: false
   },
   computed: {
     currentTime () {
@@ -170,13 +192,16 @@ var q_app = new Vue({
         this.update_date()
         this.play()
       }
+    },
+    showCommunities () {
+      this.update()
     }
   },
   methods: {
 	  switch_communities_nodeid(){
 		    var _this = this
 		    d3.json(`./switch_com_nodeid`, function (jsondata){
-		    _this.update()
+          _this.showCommunities = !_this.showCommunities
 				})
 		},
     update_numlevels(num_levels){
@@ -278,10 +303,18 @@ var q_app = new Vue({
             _this.node = _this.node
               .data(nodes, function (d) {return d.id})
 
-            _this.node.exit().remove()
+            _this.node.exit()
+              // .transition()
+              // .duration(500)
+              .remove()
 
-            _this.node = _this.node.enter().append("circle")
+            _this.node = _this.node.enter()
+                .append("circle")
                 .merge(_this.node)
+                  // .transition()
+                  // .duration(500)
+                  .attr("r", 0)
+                  // .transition()
                   .attr("r", function(d) { return d.value * 3 })
                   .attr("fill", function(d) { return "#"+d.color})
                   .call(
