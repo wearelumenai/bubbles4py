@@ -119,7 +119,7 @@ class Fake_redis_driver_naval:
         nodes = [ {'id':n, 'value':int(1+math.log(len(communities[n])))} for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]
         print('level', self.level, 'last level', self.last_level, 'time traveller', self.stop_time)
         for n in nodes:
-            if self.switch_com_nodeid or (not self.switch_com_nodeid and self.last_level == self.level -1): # each node get it's own color (special case if you were in community view mode and jump to the higher level, in order to preserve color consistency between two subsequent levels
+            if (not self.switch_com_nodeid) or self.last_level == self.level -1: # each node get it's own color (special case if you were in community view mode and jump to the higher level, in order to preserve color consistency between two subsequent levels
                 n['color'] = self.get_node_color(n['id'])
             else: # each node will have the color of its parent
                 child_level = community_tree.nodes[n['id']]['level']
@@ -152,7 +152,8 @@ class Fake_redis_driver_naval:
           n['id'] = str(n['id'])
         graph['nodes'] = nodes
         graph['links'] = links
-        return graph 
+        graph['com_nodeid'] = self.switch_com_nodeid
+        return graph
 
     """
     def get_result(self, result_id):
