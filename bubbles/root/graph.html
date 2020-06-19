@@ -196,20 +196,19 @@
     methods: {
       draw_curve () {
         d3.json(`/get_curve`, function(error, json) {
-          console.log(json)
-          console.log("here")
-          //data = [{'date':1, 'value':1}, {'date':2, 'value':4}, {'date':3, 'value':3}]
-          // data = [{'date': 1550220892.0, 'value': 6}, {'date': 1550220900.0, 'value': 6}, {'date': 1550220908.0, 'value': 6}, {'date': 1550220916.0, 'value': 6}, {'date': 1550220923.0, 'value': 6}, {'date': 1550220931.0, 'value': 6}, {'date': 1550220940.0, 'value': 6}]
           var data = json.curve
+
 
           data.forEach(
             function(elt) {
-              elt.date = new Date(elt.date * 1000)
+              elt.date = new Date((3600 + elt.date) * 1000)
             }
           )
           console.log(data)
           var svg_curve = d3.select('#curve')
           
+          svg_curve.selectAll("*").remove();// a bit brutal, better used .exit(), but not sure on which part I should apply it
+
           var width = svg_curve.attr("width"),
           height = svg_curve.attr("height");
           
@@ -247,7 +246,7 @@
           svg_curve.append("g")
           .call(yAxis);
           
-          svg_curve.append("path")
+          data = svg_curve.append("path")
           .datum(data)
           .attr("fill", "none")
           .attr("stroke", "steelblue")
@@ -255,6 +254,9 @@
           .attr("stroke-linejoin", "round")
           .attr("stroke-linecap", "round")
           .attr("d", line);
+					
+					data.exit().remove()
+
         })
       },
       switch_communities_nodeid(){
@@ -303,7 +305,7 @@
         }
       },
       formatDate (date) {
-        return Quasar.date.formatDate(new Date(date * 1000), 'YYYY-MM-DD HH:mm');
+        return Quasar.date.formatDate(new Date((3600 + date) * 1000), 'YYYY-MM-DD HH:mm');
       },
       init () {
         var svg = d3.select("#graph"),
