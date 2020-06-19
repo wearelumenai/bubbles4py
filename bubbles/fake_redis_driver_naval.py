@@ -97,6 +97,17 @@ class Fake_redis_driver_naval:
             values.append({'date': self.dates[i], 'value': len(com_id_this_level)})
         return values
 
+    def get_community_activities(self, communities):
+        community_activities = {}
+        for (com_id, nodes) in communities.items():
+            activities_this_com = []
+            for n in nodes
+                last_activity_this_node = max([ self.graph.edges[e]['created_at'] for e in self.graph.edges(nodes) ])
+                activities_this_com.append(last_activity_this_node)
+            activity_this_com = np.quantile(activities_this_com, 0.8)
+            community_activities[com_id] = activity_this_com
+        return community_activities
+
     def get_result(self, result_id):
         """
         Ignoring the result_id actually, just read what is in the redis database 
