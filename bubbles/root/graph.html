@@ -186,7 +186,6 @@ var q_app = new Vue({
       this.set_date()
     },
     playing (playing) {
-			  console.log("playing")
 			  d3.json('./stop_time', function(result){ return 1});
       if (playing) {
         this.update_date()
@@ -317,6 +316,7 @@ var q_app = new Vue({
                   // .transition()
                   .attr("r", function(d) { return d.value * 3 })
                   .attr("fill", function(d) { return "#"+d.color})
+									//.attr('fill-opacity', 0.2)
                   .call(
                     d3.drag()
                       .on('start', dragstarted)
@@ -368,8 +368,6 @@ var q_app = new Vue({
       });
 
 d3.json(`/get_curve`, function(error, json) {
-console.log(json)
-console.log("here")
  //data = [{'date':1, 'value':1}, {'date':2, 'value':4}, {'date':3, 'value':3}]
 // data = [{'date': 1550220892.0, 'value': 6}, {'date': 1550220900.0, 'value': 6}, {'date': 1550220908.0, 'value': 6}, {'date': 1550220916.0, 'value': 6}, {'date': 1550220923.0, 'value': 6}, {'date': 1550220931.0, 'value': 6}, {'date': 1550220940.0, 'value': 6}]
 data = json.curve
