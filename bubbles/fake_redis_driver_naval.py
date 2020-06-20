@@ -26,7 +26,7 @@ class Fake_redis_driver_naval:
         self.colors = {}
         self.last_level = -1
         self.offset = 1000 
-        self.time_idx = self.offset
+        self.time_idx = 1 # self.offset
         self.dates = sorted(self.communities.keys()) #, key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
         self.level = 1
         self.stop_time= False
@@ -141,6 +141,7 @@ class Fake_redis_driver_naval:
         """
         Ignoring the result_id actually, just read what is in the redis database 
         """
+        print(self.time_idx, len(self.dates))
         last_date = self.dates[self.time_idx]
         community_tree = self.communities[last_date]['community_tree']
         communities = aggregate_childrens(community_tree, self.level)
