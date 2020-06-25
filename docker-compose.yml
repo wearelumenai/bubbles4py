@@ -1,0 +1,7 @@
+version: '3.7'
+
+services:
+  bubbles4py:
+    build: .
+    ports:
+      - 49449:49449

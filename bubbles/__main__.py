@@ -4,6 +4,10 @@ import sys
 from . import Server
 from .drivers import drivers
 
+from os import environ
+
+PORT=environ.get('BUBBLES4PY_PORT', 49449)
+
 
 def get_driver(driver_class, *args):
     return drivers[driver_class](*args)
@@ -12,7 +16,7 @@ def get_driver(driver_class, *args):
 def start(driver_args, server_name):
     driver = get_driver(*driver_args)
     server = Server(driver)
-    server.start(server=server_name, port=49449, quiet=True)
+    server.start(server=server_name, port=PORT, quiet=True)
     try:
         server.join()
     except KeyboardInterrupt:

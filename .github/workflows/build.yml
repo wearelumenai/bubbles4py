@@ -1,0 +1,25 @@
+---
+name: Build Pipeline
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: bubbles4py@docker
+        uses: elgohr/Publish-Docker-Github-Action@master
+        with:
+          name: wearelumenai/bubbles4py/bubbles4py
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+          registry: docker.pkg.github.com
+          dockerfile: ./Dockerfile
+          tag_semver: true
+          buildoptions: "--compress"
