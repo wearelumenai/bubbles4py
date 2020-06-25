@@ -60,8 +60,8 @@ class Server:
 
     def numlevels(self):
         if getattr(self.driver, "get_num_levels", None):
-            num_of_levels, cur_level, num_of_com, com_id = self.driver.get_num_levels()
-            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com, "com_id": com_id}
+            num_of_levels, cur_level, num_of_coms, com_id = self.driver.get_num_levels()
+            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_coms": num_of_coms, "com_id": com_id}
         else:
             num_of_levels = 0
             result = {"num_of_levels": num_of_levels}
@@ -69,8 +69,8 @@ class Server:
 
     def set_level(self, level):
         if getattr(self.driver, "set_level", None):
-            num_of_levels, cur_level, num_of_com, com_id = self.driver.set_level(level)
-            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_com": num_of_com, "com_id": com_id}
+            num_of_levels, cur_level, num_of_coms, com_id = self.driver.set_level(level)
+            result = {"num_of_levels": num_of_levels, "cur_level": cur_level, "num_of_coms": num_of_coms, "com_id": com_id}
         else:
             num_of_levels = 0
             result = {"num_of_levels": num_of_levels}

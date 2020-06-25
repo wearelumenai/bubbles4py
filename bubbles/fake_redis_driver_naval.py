@@ -25,8 +25,8 @@ class Fake_redis_driver_naval:
         self.com_id = -1
         self.colors = {}
         self.last_level = -1
-        self.offset = 1000 
-        self.time_idx = 1 # self.offset
+        self.offset = 0
+        self.time_idx = self.offset
         self.dates = sorted(self.communities.keys()) #, key = lambda t: time.strptime(t, '%a %b %d %H:%M:%S +0000 %Y')) 
         self.level = 1
         self.stop_time= False
@@ -50,20 +50,32 @@ class Fake_redis_driver_naval:
         levels = list(set([community_tree.nodes[n]['level'] for n in community_tree.nodes ]))
         if len(levels) > 1:
             levels.pop()
-        return len(levels), self.level, num_of_communities, self.com_id
+        num_of_coms = self.num_of_coms(community_tree, len(levels))
+        return len(levels), self.level, num_of_coms, self.com_id
 
     def switch_com_nodeid_func(self):
         self.switch_com_nodeid = not self.switch_com_nodeid
+
+    def num_of_coms(self, community_tree, num_of_levels):
+
+        def num_of_com(level):
+            return len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ])
+
+        return [
+            num_of_com(level) for level in range(num_of_levels)
+        ]
 
     def get_num_levels(self):
         community_tree = self.communities[self.dates[self.time_idx]]['community_tree']
         levels = list(set([community_tree.nodes[n]['level'] for n in community_tree.nodes ]))
         if len(levels) > 1: # assuming the last one is useless because it does not have edges
             levels.pop()
-        num_of_levels = len(levels) - 1
-        num_of_com = len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]) 
-        print("last date", self.dates[self.time_idx], 'index', self.time_idx, num_of_levels, self.level, num_of_com, self.com_id)
-        return num_of_levels, self.level, num_of_com, self.com_id
+        num_of_levels = len(levels)
+
+        num_of_coms = self.num_of_coms(community_tree, num_of_levels)
+
+        print("last date", self.dates[self.time_idx], 'index', self.time_idx, num_of_levels, self.level, num_of_coms, self.com_id)
+        return num_of_levels, self.level, num_of_coms, self.com_id
 
     def set_date(self, date):
         date = int(date) +  self.offset 

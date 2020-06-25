@@ -34,7 +34,21 @@
         <q-page-container>
           <q-page padding>
             <div class="row">
-              <q-slider reverse vertical v-model="level" :min="1" :max="levelList.length" snap label reverses :label-value="message" label-always class="col-2" color="secondary"></q-slider>
+              <q-timeline class="col-2">
+                <q-timeline-entry
+                  v-for="({ id, text, coms }) in [...levelList].reverse()" :key="id"
+                  :title="`level ${id}`"
+                  :subtitle="`${coms} communities`"
+                  @click="level = id"
+                  class="cursor-pointer"
+                >
+                </q-timeline-entry>
+              </q-timeline>
+              <!--q-slider
+                reverse vertical snap label reverses label-always
+                v-model="level" :min="1" :max="levelList.length" :label-value="message"
+                class="col-2" color="secondary"
+              ></q-slider-->
               <svg width="960" height="600" id="graph"></svg>
             </div>
           </q-page>
@@ -270,11 +284,19 @@
         for(var i=1; i<num_levels.num_of_levels+1; i++){
           new_button_list.push({id: i, text : 'level' + i })
         }
+
+        new_button_list.forEach(
+          (levelItem, index) => {
+            levelItem.coms = num_levels.num_of_coms[index]
+          }
+        )
+
         this.levelList = new_button_list
         if (this.level === 0) {
           this.level = this.levelList.length
         }
-        this.message = "Level: " + num_levels.cur_level + " (" + num_levels.num_of_com + " communities)"
+
+        // this.message = "Level: " + num_levels.cur_level + " (" + num_levels.num_of_com + " communities)"
       },
       update_date (result) {
         var _this = this
