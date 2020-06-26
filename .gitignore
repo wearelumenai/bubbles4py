@@ -110,3 +110,4 @@ results.db
 data
 
 .vscode
+.DS_Store
