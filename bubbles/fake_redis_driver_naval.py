@@ -14,11 +14,10 @@ import math
 class Fake_redis_driver_naval:
     """get some data, push then sequentially to grphclus, and read the result in the redis database which the grphclus storage"""
 
-    def __init__(self, pickle_containing_graph_and_coms, send_edge=True):
+    def __init__(self, pickle_containing_graph_and_coms):
         """
         Create a new MemDriver instance
         """
-
         data = pickle.load(open(pickle_containing_graph_and_coms, 'rb')) 
         self.graph = data['graph']
         self.communities = data['communities']
@@ -79,7 +78,6 @@ class Fake_redis_driver_naval:
 
     def set_date(self, date):
         date = int(date) +  self.offset 
-        print('traveled to', self.dates[date])
         self.time_idx = date
         return self.get_result(0)
 
@@ -118,14 +116,19 @@ class Fake_redis_driver_naval:
         for (com_id, nodes) in communities.items():
             activities_this_com = []
             for n in nodes:
-                activities_this_node = [ self.graph.edges[e]['created_at'] for e in self.graph.edges(int(float(n))) ]
+                activities_this_node = []
+                for e in self.graph.edges(int(float(n))):
+                    activities_this_node.append(self.graph.edges[e]['created_at'])  
                 if len(activities_this_node) == 0:
                     print('no activity for node', n,com_id,self.level)
                     last_activity_this_node = 0
                 else:
                     last_activity_this_node = max(activities_this_node)
                 activities_this_com.append(last_activity_this_node)
-            activity_this_com = np.quantile(activities_this_com, 0.8)
+            if len(nodes) == 0:
+                activity_this_com = 0
+            else:
+                activity_this_com = np.quantile(activities_this_com, 0.8)
             community_activities[com_id] = activity_this_com
         community_activities = self.squash_with_sigmoid(community_activities)
         return community_activities
@@ -148,19 +151,17 @@ class Fake_redis_driver_naval:
         y = 1 / (1+ np.exp(-k*(x-x0)))
         return y
 
-
     def get_result(self, result_id):
         """
         Ignoring the result_id actually, just read what is in the redis database 
         """
-        print(self.time_idx, len(self.dates))
         last_date = self.dates[self.time_idx]
         community_tree = self.communities[last_date]['community_tree']
         communities = aggregate_childrens(community_tree, self.level)
         community_activities = self.get_community_activities(communities)
         graph = {"nodes": [], "links": []}
         nodes = [ {'id':n, 'value':int(1+math.log(len(communities[n]))), 'opacity': community_activities[n] } for n in community_tree.nodes if community_tree.nodes[n]['level'] == self.level ]
-        print('level', self.level, 'last level', self.last_level, 'time traveller', self.stop_time)
+        print('timeidx', self.time_idx, 'over', len(self.dates), 'level', self.level, 'last level', self.last_level, 'time is stopped', self.stop_time)
         for n in nodes:
             if (not self.switch_com_nodeid) or self.last_level == self.level -1: # each node get it's own color (special case if you were in community view mode and jump to the higher level, in order to preserve color consistency between two subsequent levels
                 n['color'] = self.get_node_color(n['id'])
@@ -181,14 +182,13 @@ class Fake_redis_driver_naval:
                 n2 = nodes[j]['id']
                 if (n1, n2) in community_tree.edges:
                     if 'weight' not in community_tree.edges[(n1,n2)]:
-                        print(n1,n2)
+                        print('no weight for this edge', n1,n2)
                         continue
                     weight = community_tree.edges[(n1,n2)]['weight']
                     weight = min(100, math.log(weight))
                     if weight == 0:
                         continue
                     links.append({'id':'_'.join(sorted([str(n1),str(n2)])),  "source": n1, "target": n2, "value": weight} )
-
         if self.time_idx < len(self.dates) - 1 and not self.stop_time:
             self.time_idx += 1        
         for n in nodes:
@@ -196,18 +196,8 @@ class Fake_redis_driver_naval:
         graph['nodes'] = nodes
         graph['links'] = links
         graph['com_nodeid'] = self.switch_com_nodeid
+        print('number of communities here', len(nodes))
         return graph
-
-    """
-    def get_result(self, result_id):
-        self.time_idx += 1
-        nnodes = self.time_idx % 10 + 1
-        nodes = [{"id":i, "name":i} for i in range(nnodes) ]
-        links = [ {"id": '_'.join(sorted([str(n),str(n+1)])), "source":n, "target":n+1 } for n in range(nnodes-1)]
-        result = {"links":links, "nodes":nodes }
-        print(result)
-        return result
-    """
 
     def detail_community(self, com_id):
         self.com_id = int(com_id)
@@ -221,7 +211,7 @@ class Fake_redis_driver_naval:
             if start is None or v['created'] > start
         }
         
-    def get_last_date(self):
+    def get_current_date(self):
         return self.dates[self.time_idx] 
 
     def how_is_the_graph(self):
@@ -244,7 +234,7 @@ def get_childrens(G, node_id):
 def get_all_leaves(community_tree, n): 
     leaves = [] 
     childrens = get_childrens(community_tree, n) 
-    if len(childrens) == 0: 
+    if len(childrens) == 0 and community_tree.nodes[n]['level'] == 0: 
         leaves.append(n) 
     for child in get_childrens(community_tree, n): 
         leaves += get_all_leaves(community_tree, child) 
