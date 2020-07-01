@@ -61,14 +61,14 @@ class Fake_redis_driver_naval:
             return len([ n for n in community_tree.nodes if community_tree.nodes[n]['level'] == level ])
 
         return [
-            num_of_com(level) for level in range(num_of_levels)
+            num_of_com(level) for level in range(1, num_of_levels)
         ]
 
     def get_num_levels(self):
         community_tree = self.communities[self.dates[self.time_idx]]['community_tree']
         levels = list(set([community_tree.nodes[n]['level'] for n in community_tree.nodes ]))
-        if len(levels) > 1: # assuming the last one is useless because it does not have edges
-            levels.pop()
+        #if len(levels) > 1: # assuming the last one is useless because it does not have edges
+        #    levels.pop()
         num_of_levels = len(levels)
 
         num_of_coms = self.num_of_coms(community_tree, num_of_levels)

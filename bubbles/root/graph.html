@@ -15,9 +15,7 @@
     <link href="https://cdn.jsdelivr.net/npm/quasar@1.12.2/dist/quasar.min.css" rel="stylesheet" type="text/css">
   </head>
   <body>
-    
     <div id="q-app">
-      
       <q-layout view="hHh LpR fff">
         <q-header>
           <q-toolbar>
@@ -114,9 +112,6 @@
   var q_app = new Vue({
     el: '#q-app',
     async mounted(){
-      /*let bubbleChart = bub.bubbles.create("#viz", bub.XYChart, {"click": onChartClick});
-      const detailsDisplay = DetailDisplay(d3.select("#detail"));
-      const dimensionPicker = DimensionPicker(d3.select("#command"), onDimensionChanged);*/
       this.init()
       this.update()
     },
@@ -157,7 +152,7 @@
       },
       playing (playing) {
         console.log("playing")
-        d3.json('./stop_time', function(result){ return 1});
+        d3.json('./stop_time', function(result){ return 1}); // what is the javascript way of calling the stop_time server route, without using this d3.json function?
         if (playing) {
           this.update_date()
           this.play()
@@ -243,7 +238,7 @@
       },
       update_numlevels(num_levels){
         new_button_list = []
-        for(var i=1; i<num_levels.num_of_levels+1; i++){
+        for(var i=1; i<num_levels.num_of_levels; i++){
           new_button_list.push({id: i, text : 'level' + i })
         }
 
