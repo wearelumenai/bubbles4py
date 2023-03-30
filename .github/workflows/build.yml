@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: bubbles4py@docker
-        uses: elgohr/Publish-Docker-Github-Action@master
+        uses: elgohr/Publish-Docker-Github-Action@v5
         with:
           name: wearelumenai/bubbles4py/bubbles4py
           username: ${{ secrets.DOCKER_USERNAME }}
